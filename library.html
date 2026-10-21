@@ -241,6 +241,7 @@ function extractCode(text) {
   return /^[A-Za-z0-9]{8,64}$/.test(c) ? c : null;
 }
 $("scanBtn").addEventListener("click", async () => {
+  faceLib().then(F => F.loadFace()).catch(() => {});   // preload face models in the background
   setMsg("msg", ""); setMsg("scanMsg", "");
   if (!faceDesc) { setMsg("enrollMsg", ""); show("enroll"); return; }
   const last = Number(lsGet("libLast_" + me.uid) || 0);
@@ -296,7 +297,7 @@ async function loop() {
 
 // ---------- Student: face check and first-time face registration ----------
 let faceMod = null;   // face.js is loaded only when needed, so this page opens even if it is missing
-const faceLib = async () => faceMod || (faceMod = await import("./face.js?v=4"));
+const faceLib = async () => faceMod || (faceMod = await import("./face.js?v=6"));
 const faceMsg = err => faceMod ? faceMod.faceError(err) : "Couldn't load face.js. Save it in the same folder as this page and open the site with Live Server or your https address.";
 async function verifyThenSubmit(code) {
   faceCtl = { cancelled: false }; setMsg("msg", ""); $("faceHint").textContent = "Loading face recognition…"; show("face");

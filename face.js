@@ -10,7 +10,7 @@ const LIBS = [
 ];
 
 // lower = stricter. 0.6 is the face-api.js default; 0.5 rejects many genuine matches.
-export const FACE_JS_VERSION = "4";
+export const FACE_JS_VERSION = "5";
 export const FACE_THRESHOLD = 0.55;
 
 let ready = null;
@@ -76,7 +76,7 @@ export async function scanFace(video, status, control) {
   const sharp = new f.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
 
   const t0 = Date.now(); const recent = []; let closed = false, blinked = false, lastSeen = Date.now();
-  status("Look at the camera and blink slowly once");
+  status("Look at the camera and blink slowly once (v5)");
   while (Date.now() - t0 < 25000) {
     if (control && control.cancelled) throw new Error("cancelled");
     if (!video.videoWidth) { await sleep(100); continue; }          // camera not ready yet

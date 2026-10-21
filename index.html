@@ -453,7 +453,7 @@ faceBtn.addEventListener("click", async () => {
   faceBtn.disabled = true; faceDesc = null; faceStatus.textContent = "Loading face recognition…";
   let stream = null, F = null;
   try {
-    F = await import("./face.js?v=4");   // loaded only now, so the login page works even if face.js is missing
+    F = await import("./face.js?v=6");   // loaded only now, so the login page works even if face.js is missing
     await F.loadFace();
     stream = await F.openCamera(faceVideo); camBox.hidden = false;
     faceDesc = await F.scanFace(faceVideo, m => { faceStatus.textContent = m; });
