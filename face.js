@@ -55,29 +55,40 @@ const ear = p => (dist(p[1], p[5]) + dist(p[2], p[4])) / (2 * dist(p[0], p[3]));
 const sleep = ms => new Promise(r => setTimeout(r, ms));
 
 export async function scanFace(video, status, control) {
-  const f = window.faceapi, opts = new f.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
-  const t0 = Date.now(); const recent = []; let closed = false, blinked = false;
-  status("Look at the camera and blink once");
+  const f = window.faceapi;
+  // Blink phase uses a small, fast detector so no blink falls between frames.
+  const fast = new f.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.4 });
+  // Descriptor phase uses a larger input for accuracy.
+  const sharp = new f.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+
+  const t0 = Date.now(); const recent = []; let closed = false, blinked = false, lastSeen = Date.now();
+  status("Look at the camera and blink slowly once");
   while (Date.now() - t0 < 25000) {
     if (control && control.cancelled) throw new Error("cancelled");
-    const det = await f.detectSingleFace(video, opts).withFaceLandmarks();
-    if (!det) continue;
+    if (!video.videoWidth) { await sleep(100); continue; }          // camera not ready yet
+    const det = await f.detectSingleFace(video, fast).withFaceLandmarks();
+    if (!det) {
+      if (Date.now() - lastSeen > 2000) status("Can't see your face. Move closer and add light in front of you.");
+      continue;
+    }
+    lastSeen = Date.now();
     const e = (ear(det.landmarks.getLeftEye()) + ear(det.landmarks.getRightEye())) / 2;
-    recent.push(e); if (recent.length > 12) recent.shift();   // rolling baseline, not all-time max
+    recent.push(e); if (recent.length > 20) recent.shift();
+    if (recent.length < 5) continue;                                 // build a baseline first
     const base = Math.max(...recent);
-    if (e < base * 0.75) closed = true;
+    if (e < base * 0.8) { closed = true; status("Blink detected, open your eyes…"); }
     else if (closed && e > base * 0.9) { blinked = true; break; }
   }
   if (!blinked) throw new Error("no-blink");
 
   status("Hold still, look straight at the camera…");
-  await sleep(400);                       // let eyes/face settle after the blink
+  await sleep(400);
   const out = [], tEnd = Date.now() + 6000;
   while (Date.now() < tEnd && out.length < 4) {
     if (control && control.cancelled) throw new Error("cancelled");
-    const r = await f.detectSingleFace(video, opts).withFaceLandmarks().withFaceDescriptor();
+    const r = await f.detectSingleFace(video, sharp).withFaceLandmarks().withFaceDescriptor();
     if (r && r.detection.score > 0.7) out.push(Array.from(r.descriptor));
-    await sleep(150);                     // space samples out so averaging actually helps
+    await sleep(150);
   }
   if (out.length < 3) throw new Error("no-face");
   return out[0].map((_, i) => Math.round((out.reduce((s, d) => s + d[i], 0) / out.length) * 1e4) / 1e4);
