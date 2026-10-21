@@ -10,6 +10,7 @@ const LIBS = [
 ];
 
 // lower = stricter. 0.6 is the face-api.js default; 0.5 rejects many genuine matches.
+export const FACE_JS_VERSION = "4";
 export const FACE_THRESHOLD = 0.55;
 
 let ready = null;

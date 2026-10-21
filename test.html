@@ -1,0 +1,59 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Face test</title>
+<style>
+body{font:15px system-ui,sans-serif;max-width:560px;margin:20px auto;padding:0 14px;color:#222}
+video{width:100%;max-width:360px;border-radius:12px;background:#000;transform:scaleX(-1);display:block;margin:10px 0}
+#log div{padding:5px 8px;border-bottom:1px solid #eee;word-break:break-word}
+.ok{color:#0a7a3d}.bad{color:#c0213b;font-weight:700}.info{color:#555}
+button{padding:10px 16px;font-size:15px;border-radius:10px;border:0;background:#7b5cff;color:#fff;cursor:pointer}
+button:disabled{opacity:.5}
+</style></head><body>
+<h2>Face recognition test</h2>
+<p>Put this file in the same folder as <code>face.js</code>, open it over https (or localhost), then press the button.</p>
+<button id="go">Run test</button>
+<video id="v" playsinline muted></video>
+<div id="log"></div>
+<script type="module">
+const log = (t, c="info") => { const d=document.createElement("div"); d.className=c; d.textContent=t; document.getElementById("log").appendChild(d); };
+document.getElementById("go").onclick = async (e) => {
+  e.target.disabled = true; document.getElementById("log").innerHTML = "";
+  let F, stream;
+  try {
+    log("Page address: " + location.href);
+    log("Secure context (https/localhost): " + window.isSecureContext, window.isSecureContext ? "ok" : "bad");
+    log("Camera API available: " + !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia), navigator.mediaDevices ? "ok" : "bad");
+
+    F = await import("./face.js?t=" + Date.now());
+    log("face.js loaded, version " + (F.FACE_JS_VERSION || "OLD (no version, your site is serving an old face.js)"), F.FACE_JS_VERSION === "4" ? "ok" : "bad");
+
+    log("Loading face models (may take 10-20 s)…");
+    await F.loadFace();
+    log("Face models loaded", "ok");
+
+    stream = await F.openCamera(document.getElementById("v"));
+    const v = document.getElementById("v");
+    log("Camera started: " + v.videoWidth + "x" + v.videoHeight, "ok");
+
+    // quick detection check
+    const f = window.faceapi, o = new f.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.4 });
+    let seen = 0, t0 = Date.now(), n = 0;
+    while (Date.now() - t0 < 4000) { n++; if (await f.detectSingleFace(v, o)) seen++; }
+    log("Face found in " + seen + " of " + n + " frames (" + Math.round(n/4) + " checks/second)", seen ? "ok" : "bad");
+    if (!seen) throw new Error("Face never detected. Face the camera with light in front of you.");
+
+    log("Now blink slowly once…");
+    const d = await F.scanFace(v, m => log(m));
+    log("Scan OK, face print has " + d.length + " numbers", "ok");
+    log("Distance to itself: " + F.faceDistance(d, d).toFixed(3) + " (threshold " + F.FACE_THRESHOLD + ")", "ok");
+    log("ALL STEPS PASSED", "ok");
+  } catch (err) {
+    console.error(err);
+    log("FAILED: " + (err && err.name) + " / " + (err && err.message), "bad");
+    if (F && F.faceError) log("User-facing message: " + F.faceError(err), "bad");
+  } finally {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    e.target.disabled = false;
+  }
+};
+</script></body></html>
