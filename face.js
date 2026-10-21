@@ -2,7 +2,6 @@
 // Everything runs in the student's browser. Only a list of 128 numbers (a "face print") is
 // saved, never a photo.
 
-// Two sources are tried in turn, each with its own matching model files.
 const LIBS = [
   { script: "https://cdn.jsdelivr.net/npm/face-api.js@0.22.2/dist/face-api.min.js",
     models: "https://cdn.jsdelivr.net/gh/justadudewhohacks/face-api.js@0.22.2/weights" },
@@ -10,7 +9,8 @@ const LIBS = [
     models: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model" }
 ];
 
-export const FACE_THRESHOLD = 0.5;   // lower = stricter. Distances above this are "not the same person".
+// lower = stricter. 0.6 is the face-api.js default; 0.5 rejects many genuine matches.
+export const FACE_THRESHOLD = 0.55;
 
 let ready = null;
 function addScript(src) {
@@ -30,7 +30,7 @@ export function loadFace() {
         const f = window.faceapi;
         await Promise.all([
           f.nets.tinyFaceDetector.loadFromUri(L.models),
-          f.nets.faceLandmark68TinyNet.loadFromUri(L.models),
+          f.nets.faceLandmark68Net.loadFromUri(L.models),   // full landmark model: better face alignment
           f.nets.faceRecognitionNet.loadFromUri(L.models)
         ]);
         return;
@@ -50,35 +50,37 @@ export async function openCamera(video) {
 }
 export function closeCamera(stream) { if (stream) stream.getTracks().forEach(t => t.stop()); }
 
-// Eye openness from 6 landmark points
 const dist = (a, b) => Math.hypot(a.x - b.x, a.y - b.y);
 const ear = p => (dist(p[1], p[5]) + dist(p[2], p[4])) / (2 * dist(p[0], p[3]));
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 
-// Waits for one blink (proves a live person, not a still photo), then returns an averaged face print.
-// control = { cancelled: false } lets the caller stop the scan.
 export async function scanFace(video, status, control) {
-  const f = window.faceapi, opts = new f.TinyFaceDetectorOptions({ inputSize: 224, scoreThreshold: 0.5 });
-  const t0 = Date.now(); let maxEar = 0, closed = false, blinked = false;
+  const f = window.faceapi, opts = new f.TinyFaceDetectorOptions({ inputSize: 320, scoreThreshold: 0.5 });
+  const t0 = Date.now(); const recent = []; let closed = false, blinked = false;
   status("Look at the camera and blink once");
   while (Date.now() - t0 < 25000) {
     if (control && control.cancelled) throw new Error("cancelled");
-    const det = await f.detectSingleFace(video, opts).withFaceLandmarks(true);
+    const det = await f.detectSingleFace(video, opts).withFaceLandmarks();
     if (!det) continue;
     const e = (ear(det.landmarks.getLeftEye()) + ear(det.landmarks.getRightEye())) / 2;
-    maxEar = Math.max(maxEar, e);
-    if (e < maxEar * 0.7) closed = true;
-    else if (closed && e > maxEar * 0.88) { blinked = true; break; }
+    recent.push(e); if (recent.length > 12) recent.shift();   // rolling baseline, not all-time max
+    const base = Math.max(...recent);
+    if (e < base * 0.75) closed = true;
+    else if (closed && e > base * 0.9) { blinked = true; break; }
   }
   if (!blinked) throw new Error("no-blink");
-  status("Hold still…");
-  const out = [];
-  for (let i = 0; i < 25 && out.length < 3; i++) {
+
+  status("Hold still, look straight at the camera…");
+  await sleep(400);                       // let eyes/face settle after the blink
+  const out = [], tEnd = Date.now() + 6000;
+  while (Date.now() < tEnd && out.length < 4) {
     if (control && control.cancelled) throw new Error("cancelled");
-    const r = await f.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
-    if (r) out.push(Array.from(r.descriptor));
+    const r = await f.detectSingleFace(video, opts).withFaceLandmarks().withFaceDescriptor();
+    if (r && r.detection.score > 0.7) out.push(Array.from(r.descriptor));
+    await sleep(150);                     // space samples out so averaging actually helps
   }
   if (out.length < 3) throw new Error("no-face");
-  return out[0].map((_, i) => Math.round(((out[0][i] + out[1][i] + out[2][i]) / 3) * 1e4) / 1e4);
+  return out[0].map((_, i) => Math.round((out.reduce((s, d) => s + d[i], 0) / out.length) * 1e4) / 1e4);
 }
 
 export const faceDistance = (a, b) => Math.sqrt(a.reduce((s, v, i) => s + (v - b[i]) ** 2, 0));
