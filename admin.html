@@ -1,0 +1,461 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="robots" content="noindex,nofollow">
+<title>CampusConnect | Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceeff;--surface:#f4f5ff;--text:#2e2a4f;--muted:#7d79a0;--purple:#8b6cff;--red:#e0457f;--green:#1fa97a;
+--clay:9px 9px 20px rgba(130,118,200,.3),-9px -9px 20px rgba(255,255,255,.95),inset -5px -5px 10px rgba(130,118,200,.15),inset 5px 5px 10px rgba(255,255,255,.9);
+--press:inset 7px 7px 14px rgba(130,118,200,.26),inset -7px -7px 14px rgba(255,255,255,.95);
+--field:inset 5px 5px 10px rgba(130,118,200,.24),inset -5px -5px 10px rgba(255,255,255,.95)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text)}
+button,input,select{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+[hidden]{display:none!important}
+.btn{border:none;border-radius:18px;padding:12px 20px;font-size:13px;font-weight:800;cursor:pointer;color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:6px 8px 16px rgba(123,92,245,.38),inset 4px 4px 8px rgba(255,255,255,.4)}
+.btn:disabled{opacity:.6;cursor:wait}
+.btn.soft{background:var(--surface);color:var(--text);box-shadow:var(--clay)}
+.btn.sm{padding:8px 13px;font-size:12px;border-radius:14px}
+.btn.red{background:linear-gradient(145deg,#ff9db7,#ee5c86);box-shadow:5px 6px 12px rgba(238,92,134,.35)}
+.btn.green{background:linear-gradient(145deg,#a2f0d8,#3fcf9f);color:#0d4a37;box-shadow:5px 6px 12px rgba(63,207,159,.35)}
+.in{width:100%;height:50px;padding:0 18px;border:none;border-radius:18px;background:#eceeff;box-shadow:var(--field);outline:none;font-size:14px;font-weight:700}
+.in:focus{box-shadow:var(--field),0 0 0 3px rgba(139,108,255,.4)}
+#login{min-height:100vh;display:grid;place-items:center;padding:20px}
+.card{width:min(400px,100%);padding:34px 30px;border-radius:34px;background:var(--surface);box-shadow:var(--clay)}
+.card h1{font-size:26px;font-weight:900;letter-spacing:-.6px;margin-bottom:4px}
+.card p{color:var(--muted);font-weight:600;font-size:14px;margin-bottom:22px}
+.f{margin-bottom:16px}.f label{display:block;font-size:13px;font-weight:800;margin-bottom:8px}
+.err{display:none;margin-bottom:14px;padding:12px 16px;border-radius:16px;background:#ffe4ed;color:#c93a69;font-size:13px;font-weight:700}
+.err.show{display:block}
+.nav{position:sticky;top:12px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 16px 0;padding:12px 20px;border-radius:28px;background:var(--surface);box-shadow:var(--clay)}
+.brand{font-size:18px;font-weight:900}.brand span{color:var(--purple)}
+.brand small{margin-left:8px;padding:4px 10px;border-radius:12px;font-size:11px;color:#fff;background:#3b3560}
+.who{font-size:13px;font-weight:800;display:flex;align-items:center;gap:12px}
+.wrap{max-width:1150px;margin:0 auto;padding:30px 20px 60px}
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:18px;margin-bottom:28px}
+.stat{padding:18px;border-radius:26px;background:var(--surface);box-shadow:var(--clay)}
+.stat b{display:block;font-size:30px;font-weight:900}
+.stat span{font-size:12px;font-weight:800;color:var(--muted)}
+.bar{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:20px}
+.tabs{display:flex;gap:6px;padding:6px;border-radius:22px;background:#e8eaff;box-shadow:var(--press)}
+.tab{border:none;background:transparent;color:var(--muted);padding:10px 18px;border-radius:16px;font-size:13px;font-weight:800;cursor:pointer}
+.tab.on{color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:5px 6px 12px rgba(123,92,245,.4)}
+.bar .in{flex:1 1 220px;width:auto}.bar select.in{flex:0 0 auto;min-width:170px;cursor:pointer}
+.tw{overflow-x:auto;border-radius:28px;background:var(--surface);box-shadow:var(--clay)}
+table{width:100%;border-collapse:collapse;min-width:720px}
+th{text-align:left;padding:16px 18px;font-size:12px;color:var(--muted);font-weight:900;text-transform:uppercase;letter-spacing:.5px}
+td{padding:14px 18px;font-size:13.5px;font-weight:700;border-top:1px solid rgba(130,118,200,.15);vertical-align:middle}
+td small{display:block;color:var(--muted);font-weight:600;font-size:12px}
+.tag{display:inline-block;padding:5px 11px;border-radius:12px;font-size:11px;font-weight:900;color:#fff;background:#8b6cff}
+.tag.lost,.tag.red{background:#ff7a9c}.tag.found,.tag.green{background:#3fcf9f}.tag.gray{background:#9a96bd}
+.acts{display:flex;gap:8px;flex-wrap:wrap}
+.empty{padding:40px;text-align:center;color:var(--muted);font-weight:700}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,30px);opacity:0;z-index:200;padding:14px 24px;border-radius:20px;font-weight:800;background:var(--surface);box-shadow:var(--clay);transition:all .3s;pointer-events:none;max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@media(max-width:560px){.nav{margin:10px;padding:10px 14px}.wrap{padding:22px 12px 50px}.who span{display:none}}
+.evform{padding:24px;border-radius:28px;background:var(--surface);box-shadow:var(--clay);margin-bottom:22px}
+.evform h2{font-size:20px;font-weight:900;margin-bottom:16px}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:0 16px}
+textarea.in{height:auto;padding:14px 18px;min-height:90px;resize:vertical;line-height:1.5}
+input[type=file].in{padding:12px 18px;height:auto}
+.sum{margin-top:14px;font-size:13px;font-weight:800;color:var(--muted)}
+</style>
+</head>
+<body>
+
+<section id="login">
+  <form class="card" id="loginForm" novalidate>
+    <h1>Admin <span style="color:var(--purple)">sign in</span></h1>
+    <p>Authorized staff only.</p>
+    <div class="f"><label for="aid">Admin ID</label><input class="in" id="aid" autocomplete="username" autocapitalize="none" spellcheck="false" required></div>
+    <div class="f"><label for="apw">Password</label><input class="in" id="apw" type="password" autocomplete="current-password" required></div>
+    <div class="err" id="loginErr" role="alert"></div>
+    <button class="btn" id="loginBtn" type="submit" style="width:100%;height:50px">Sign in</button>
+  </form>
+</section>
+
+<div id="panel" hidden>
+  <header class="nav">
+    <div class="brand">Campus<span>Connect</span><small>ADMIN</small></div>
+    <div class="who"><span id="adminName"></span><button class="btn soft sm" id="logout" type="button">Log out</button></div>
+  </header>
+  <main class="wrap">
+    <section class="stats" id="stats"></section>
+    <div class="bar">
+      <div class="tabs" id="tabs">
+        <button class="tab on" data-tab="users" type="button">Students</button>
+        <button class="tab" data-tab="lf" type="button">Lost &amp; Found</button>
+        <button class="tab" data-tab="mk" type="button">Marketplace</button>
+        <button class="tab" data-tab="ev" type="button">Events</button>
+        <button class="tab" data-tab="lib" type="button">Library</button>
+      </div>
+      <input class="in" id="q" type="search" placeholder="Search…" aria-label="Search">
+      <select class="in" id="lfFilter" aria-label="Status filter" hidden>
+        <option value="all">All reports</option>
+        <option value="open">Not recovered</option>
+        <option value="done">Recovered</option>
+      </select>
+      <button class="btn soft sm" id="refresh" type="button">Refresh</button>
+    </div>
+    <form class="evform" id="evForm" hidden novalidate>
+      <h2>Post an event</h2>
+      <div class="grid2">
+        <div class="f"><label for="eTitle">Event name</label><input class="in" id="eTitle" maxlength="100"></div>
+        <div class="f"><label for="eCat">Category</label><select class="in" id="eCat"></select></div>
+        <div class="f"><label for="eVenue">Venue</label><input class="in" id="eVenue" maxlength="100" placeholder="e.g. Main auditorium"></div>
+        <div class="f"><label for="eDate">Date</label><input class="in" id="eDate" type="date"></div>
+        <div class="f"><label for="eTime">Time</label><input class="in" id="eTime" type="time"></div>
+        <div class="f"><label for="eFile">Poster (optional)</label><input class="in" id="eFile" type="file" accept="image/*"></div>
+      </div>
+      <div class="f"><label for="eDesc">Details</label><textarea class="in" id="eDesc" maxlength="1000" placeholder="What is it, who can join, anything to bring?"></textarea></div>
+      <div class="err" id="evErr" role="alert"></div>
+      <button class="btn" id="evSubmit" type="submit">Publish event</button>
+    </form>
+    <div class="evform" id="libFilters" hidden>
+      <h2>Filter check-ins</h2>
+      <div class="grid2">
+        <div class="f"><label for="fUid">College UID</label><input class="in" id="fUid" placeholder="Search by UID" autocomplete="off"></div>
+        <div class="f"><label for="fName">Student name</label><input class="in" id="fName" placeholder="Search by name" autocomplete="off"></div>
+        <div class="f"><label for="fCourse">Course</label><select class="in" id="fCourse"><option value="">All courses</option></select></div>
+        <div class="f"><label for="fStatus">Status</label>
+          <select class="in" id="fStatus">
+            <option value="">All statuses</option>
+            <option value="Inside">Inside now</option>
+            <option value="Checked out">Checked out</option>
+            <option value="No check-out">No check-out</option>
+          </select></div>
+        <div class="f"><label for="fFrom">From date</label><input class="in" id="fFrom" type="date"></div>
+        <div class="f"><label for="fTo">To date</label><input class="in" id="fTo" type="date"></div>
+        <div class="f"><label for="fSort">Sort by</label>
+          <select class="in" id="fSort">
+            <option value="new">Newest first</option>
+            <option value="old">Oldest first</option>
+            <option value="long">Longest stay</option>
+            <option value="short">Shortest stay</option>
+          </select></div>
+      </div>
+      <div class="acts">
+        <button class="btn soft sm" id="fToday" type="button">Today</button>
+        <button class="btn soft sm" id="fWeek" type="button">Last 7 days</button>
+        <button class="btn soft sm" id="fClear" type="button">Clear filters</button>
+      </div>
+      <div class="sum" id="libSum"></div>
+    </div>
+    <div class="tw"><table><thead id="thead"></thead><tbody id="tbody"></tbody></table><div class="empty" id="empty" hidden></div></div>
+  </main>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signInWithEmailAndPassword, signOut, sendPasswordResetEmail, setPersistence, browserSessionPersistence }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, getDocs, getDoc, setDoc, deleteDoc, doc, query, orderBy, limit, serverTimestamp, addDoc }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+// Admin accounts are created in Firebase Auth with the email  <adminId>@ADMIN_DOMAIN
+const ADMIN_DOMAIN = "admin.campusconnect.example";
+const app = initializeApp({
+  apiKey: "AIzaSyCKfSjhTBaoK9Kjm_NFx7I0Yf8WT7vyWPo",
+  authDomain: "universityconnect-culko.firebaseapp.com",
+  projectId: "universityconnect-culko",
+  storageBucket: "universityconnect-culko.firebasestorage.app",
+  messagingSenderId: "1045958757342",
+  appId: "1:1045958757342:web:a22f5aecc6b97e982a6b4f",
+  measurementId: "G-3KFVCBL1M2"
+});
+const auth = getAuth(app), db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+
+let users = [], blocked = new Map(), lf = [], mk = [], ev = [], lib = [], tab = "users", busy = false;
+let tt; const toast = m => { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 3000); };
+const fmt = x => x && x.toMillis ? new Date(x.toMillis()).toLocaleDateString("en-IN", { day: "numeric", month: "short", year: "numeric" }) : "-";
+
+// ---------- Login ----------
+const loginErr = m => { const e = $("loginErr"); e.textContent = m || ""; e.classList.toggle("show", !!m); };
+$("loginForm").addEventListener("submit", async e => {
+  e.preventDefault(); loginErr("");
+  const id = $("aid").value.trim().toLowerCase(), pw = $("apw").value;
+  if (!/^[a-z0-9._-]{3,30}$/.test(id) || !pw) return loginErr("Enter your admin ID and password.");
+  const btn = $("loginBtn"); btn.disabled = true; btn.textContent = "Signing in…";
+  try {
+    await setPersistence(auth, browserSessionPersistence);
+    await signInWithEmailAndPassword(auth, id + "@" + ADMIN_DOMAIN, pw);
+  } catch (err) {
+    console.error(err);
+    loginErr(err.code === "auth/too-many-requests" ? "Too many attempts. Try again later." : "Incorrect admin ID or password.");
+  } finally { btn.disabled = false; btn.textContent = "Sign in"; $("apw").value = ""; }
+});
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { $("panel").hidden = true; $("login").hidden = false; return; }
+  try {
+    const s = await getDoc(doc(db, "admins", user.uid));
+    if (!s.exists()) { $("panel").hidden = true; $("login").hidden = false; loginErr("This account is not an admin."); return; }
+    $("adminName").textContent = s.data().name || "Admin";
+    $("login").hidden = true; $("panel").hidden = false;
+    loadAll();
+  } catch (err) { console.error(err); await signOut(auth); loginErr("Couldn't verify admin access."); }
+});
+$("logout").addEventListener("click", () => signOut(auth));
+
+// ---------- Data ----------
+async function loadAll() {
+  try {
+    const [u, b, l, m, v, c] = await Promise.all([
+      getDocs(query(collection(db, "users"), limit(1000))),
+      getDocs(collection(db, "blocked")),
+      getDocs(query(collection(db, "lostfound"), orderBy("createdAt", "desc"), limit(500))),
+      getDocs(query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(500))),
+      getDocs(query(collection(db, "events"), orderBy("date", "desc"), limit(300))).catch(() => null),
+      getDocs(query(collection(db, "libraryCheckins"), orderBy("checkedInAt", "desc"), limit(500))).catch(() => null)
+    ]);
+    users = u.docs.map(d => ({ id: d.id, ...d.data() }));
+    blocked = new Map(b.docs.map(d => [d.id, d.data()]));
+    lf = l.docs.map(d => ({ id: d.id, ...d.data() }));
+    mk = m.docs.map(d => ({ id: d.id, ...d.data() }));
+    ev = v ? v.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+    lib = c ? c.docs.map(d => ({ id: d.id, ...d.data() })) : [];
+    fillCourses();
+    render();
+  } catch (err) { console.error(err); toast("Couldn't load data. Check your Firestore rules."); }
+}
+$("refresh").addEventListener("click", loadAll);
+
+// ---------- UI ----------
+$("tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return; tab = b.dataset.tab;
+  document.querySelectorAll("#tabs .tab").forEach(t => t.classList.toggle("on", t === b));
+  $("lfFilter").hidden = tab !== "lf"; $("evForm").hidden = tab !== "ev"; $("libFilters").hidden = tab !== "lib";
+  if (tab === "ev") $("eDate").min = todayStr();
+  render();
+});
+$("q").addEventListener("input", render);
+$("lfFilter").addEventListener("change", render);
+
+function stats() {
+  const done = lf.filter(i => i.resolved).length;
+  const s = [["Students", users.length], ["Blocked", blocked.size], ["Lost & Found reports", lf.length],
+             ["Recovered", done], ["Not recovered", lf.length - done], ["Marketplace listings", mk.length], ["Events", ev.length]];
+  $("stats").replaceChildren(...s.map(([k, v]) => { const d = el("div", "stat"); d.append(el("b", "", v), el("span", "", k)); return d; }));
+}
+function head(cols) { const tr = el("tr"); cols.forEach(c => tr.appendChild(el("th", "", c))); $("thead").replaceChildren(tr); }
+function cell(tr, a, b) { const td = el("td", "", a); if (b) td.appendChild(el("small", "", b)); tr.appendChild(td); return td; }
+function tagCell(tr, text, cls) { const td = el("td"); td.appendChild(el("span", "tag " + (cls || ""), text)); tr.appendChild(td); }
+function btn(label, cls, fn) { const b = el("button", "btn sm " + cls, label); b.type = "button"; b.addEventListener("click", () => fn(b)); return b; }
+const match = (q, ...f) => !q || f.join(" ").toLowerCase().includes(q);
+
+function render() {
+  stats();
+  const q = $("q").value.trim().toLowerCase(), body = $("tbody"); body.replaceChildren();
+  let n = 0;
+  if (tab === "users") {
+    head(["Student", "College UID", "Course", "Status", "Actions"]);
+    users.filter(u => match(q, u.fullName, u.name, u.email, u.uid, u.course)).forEach(u => {
+      n++; const tr = el("tr"), isB = blocked.has(u.authUid);
+      cell(tr, u.fullName || u.name || "-", u.email);
+      cell(tr, u.uid || u.id); cell(tr, u.course || "-");
+      tagCell(tr, isB ? "Blocked" : "Active", isB ? "red" : "green");
+      const td = el("td"), a = el("div", "acts");
+      a.append(
+        btn(isB ? "Unblock" : "Block", isB ? "green" : "red", b => toggleBlock(u, isB, b)),
+        btn("Send password reset", "soft", b => resetPw(u, b)));
+      td.appendChild(a); tr.appendChild(td); body.appendChild(tr);
+    });
+  } else if (tab === "lf") {
+    head(["Type", "Item", "Posted by", "Date", "Status", "Actions"]);
+    const f = $("lfFilter").value;
+    lf.filter(i => (f === "all" || (f === "done") === !!i.resolved) && match(q, i.title, i.place, i.ownerName, i.ownerEmail, i.category)).forEach(i => {
+      n++; const tr = el("tr");
+      tagCell(tr, i.type === "found" ? "Found" : "Lost", i.type);
+      cell(tr, i.title, (i.category || "") + " · " + (i.place || ""));
+      cell(tr, i.ownerName || "-", i.ownerEmail); cell(tr, i.date || fmt(i.createdAt));
+      tagCell(tr, i.resolved ? "Recovered" : "Not recovered", i.resolved ? "green" : "gray");
+      const td = el("td"); td.appendChild(btn("Delete", "red", b => del("lostfound", i, b))); tr.appendChild(td); body.appendChild(tr);
+    });
+  } else if (tab === "lib") {
+    head(["Student", "Course", "Date", "Check-in", "Check-out", "Duration", "Status"]);
+    const rows = libRows(q);
+    rows.forEach(i => {
+      n++; const tr = el("tr"), st = libState(i);
+      cell(tr, i.name || "-", i.uid);
+      cell(tr, i.course || "-"); cell(tr, fmt(i.checkedInAt));
+      cell(tr, tm(i.checkedInAt)); cell(tr, tm(i.checkedOutAt)); cell(tr, dur(i));
+      tagCell(tr, st, st === "Checked out" ? "green" : st === "Inside" ? "" : "gray");
+      body.appendChild(tr);
+    });
+    libSummary(rows);
+  } else if (tab === "ev") {
+    head(["Date", "Event", "Venue", "Category", "Actions"]);
+    ev.filter(i => match(q, i.title, i.venue, i.category, i.description))
+      .sort((a, b) => (b.date + (b.time || "")).localeCompare(a.date + (a.time || ""))).forEach(i => {
+      n++; const tr = el("tr");
+      cell(tr, i.date || "-", t12(i.time));
+      cell(tr, i.title, i.poster ? "With poster" : "");
+      cell(tr, i.venue || "-"); tagCell(tr, i.category || "Other", "");
+      const td = el("td"); td.appendChild(btn("Delete", "red", b => del("events", i, b))); tr.appendChild(td); body.appendChild(tr);
+    });
+  } else {
+    head(["Type", "Listing", "Price", "Seller", "Posted", "Actions"]);
+    mk.filter(i => match(q, i.title, i.category, i.sellerName, i.sellerEmail)).forEach(i => {
+      n++; const tr = el("tr");
+      tagCell(tr, i.type === "buy" ? "Wanted" : "For sale", i.type === "buy" ? "gray" : "");
+      cell(tr, i.title, i.category || ""); cell(tr, "₹" + (i.price ?? "-"));
+      cell(tr, i.sellerName || "-", i.sellerEmail); cell(tr, fmt(i.createdAt));
+      const td = el("td"); td.appendChild(btn("Delete", "red", b => del("listings", i, b))); tr.appendChild(td); body.appendChild(tr);
+    });
+  }
+  $("empty").hidden = n > 0; $("empty").textContent = "Nothing to show.";
+}
+
+// ---------- Actions ----------
+async function run(b, fn) {
+  if (busy) return; busy = true; b.disabled = true;
+  try { await fn(); } catch (err) { console.error(err); toast("Action failed. Check your Firestore rules."); }
+  finally { busy = false; b.disabled = false; }
+}
+const toggleBlock = (u, isB, b) => run(b, async () => {
+  if (!u.authUid) return toast("This student has no linked account ID.");
+  if (!confirm((isB ? "Unblock " : "Block ") + (u.fullName || u.email) + "?")) return;
+  const ref = doc(db, "blocked", u.authUid);
+  if (isB) { await deleteDoc(ref); blocked.delete(u.authUid); toast("Student unblocked."); }
+  else {
+    const data = { uid: u.uid || u.id, email: u.email || "", fullName: u.fullName || u.name || "", blockedAt: serverTimestamp() };
+    await setDoc(ref, data); blocked.set(u.authUid, data); toast("Student blocked.");
+  }
+  render();
+});
+const resetPw = (u, b) => run(b, async () => {
+  if (!u.email) return toast("No email on file.");
+  if (!confirm("Email a password reset link to " + u.email + "?")) return;
+  await sendPasswordResetEmail(auth, u.email); toast("Reset email sent.");
+});
+const del = (colName, item, b) => run(b, async () => {
+  if (!confirm("Delete \"" + item.title + "\"? This can't be undone.")) return;
+  await deleteDoc(doc(db, colName, item.id));
+  if (colName === "lostfound") lf = lf.filter(x => x.id !== item.id);
+  else if (colName === "events") ev = ev.filter(x => x.id !== item.id);
+  else mk = mk.filter(x => x.id !== item.id);
+  toast("Deleted."); render();
+});
+
+// ---------- Events: post from the admin panel ----------
+["Fest", "Workshop", "Club", "Sports", "Academic", "Other"].forEach(c => $("eCat").appendChild(new Option(c, c)));
+const pad = n => String(n).padStart(2, "0");
+function todayStr() { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); }
+const t12 = t => { if (!t) return ""; const [h, m] = t.split(":").map(Number); return (h % 12 || 12) + ":" + pad(m) + " " + (h < 12 ? "AM" : "PM"); };
+let evPoster = "";
+const evErr = m => { const e = $("evErr"); e.textContent = m || ""; e.classList.toggle("show", !!m); };
+function compress(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const k = Math.min(1, 900 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.width * k)); c.height = Math.max(1, Math.round(img.height * k));
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      let q = 0.75, out = c.toDataURL("image/jpeg", q);
+      while (out.length > 350000 && q > 0.3) { q -= 0.15; out = c.toDataURL("image/jpeg", q); }
+      res(out);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+$("eFile").addEventListener("change", async e => {
+  evErr(""); evPoster = ""; const f = e.target.files[0]; if (!f) return;
+  if (!f.type.startsWith("image/")) { e.target.value = ""; return evErr("Please choose an image file."); }
+  try {
+    const out = await compress(f);
+    if (out.length > 380000) { e.target.value = ""; return evErr("That poster is too large. Try a smaller image."); }
+    evPoster = out; toast("Poster added.");
+  } catch { e.target.value = ""; evErr("That file couldn't be read as an image."); }
+});
+$("evForm").addEventListener("submit", async e => {
+  e.preventDefault(); evErr("");
+  const title = $("eTitle").value.trim(), venue = $("eVenue").value.trim(), date = $("eDate").value, time = $("eTime").value;
+  if (title.length < 3) return evErr("Add an event name of at least 3 characters.");
+  if (!venue) return evErr("Add the venue.");
+  if (!date || !time) return evErr("Choose the date and time.");
+  const btn = $("evSubmit"); btn.disabled = true; btn.textContent = "Publishing…";
+  const data = { title, category: $("eCat").value, venue, date, time, description: $("eDesc").value.trim(),
+                 poster: evPoster, createdBy: auth.currentUser.uid };
+  try {
+    const ref = await addDoc(collection(db, "events"), { ...data, createdAt: serverTimestamp() });
+    ev.unshift({ id: ref.id, ...data });
+    $("evForm").reset(); evPoster = ""; render(); toast("Event published.");
+  } catch (err) { console.error(err); evErr("Couldn't publish. Check that the Events rules are published in Firestore."); }
+  finally { btn.disabled = false; btn.textContent = "Publish event"; }
+});
+
+// ---------- Library check-in list helpers ----------
+const tm = x => x && x.toMillis ? new Date(x.toMillis()).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true }) : "-";
+function libState(i) {
+  if (i.checkedOutAt && i.checkedOutAt.toMillis) return "Checked out";
+  const t = i.checkedInAt && i.checkedInAt.toMillis ? i.checkedInAt.toMillis() : 0;
+  return t && Date.now() - t < 12 * 3600000 ? "Inside" : "No check-out";
+}
+function dur(i) {
+  if (!(i.checkedInAt && i.checkedInAt.toMillis && i.checkedOutAt && i.checkedOutAt.toMillis)) return "-";
+  const m = Math.round((i.checkedOutAt.toMillis() - i.checkedInAt.toMillis()) / 60000);
+  if (m < 1) return "< 1 min";
+  const h = Math.floor(m / 60);
+  return h ? h + " h " + (m % 60) + " min" : m + " min";
+}
+
+// ---------- Library filters ----------
+const dayKey = d => d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate());
+const daysAgo = n => { const d = new Date(); d.setDate(d.getDate() - n); return dayKey(d); };
+const mtxt = m => { if (m < 1) return "< 1 min"; const h = Math.floor(m / 60); return h ? h + " h " + (m % 60) + " min" : m + " min"; };
+function fillCourses() {
+  const sel = $("fCourse"), cur = sel.value;
+  const courses = [...new Set(lib.map(i => i.course).filter(Boolean))].sort();
+  sel.replaceChildren(new Option("All courses", ""), ...courses.map(c => new Option(c, c)));
+  sel.value = courses.includes(cur) ? cur : "";
+}
+function libRows(q) {
+  const uid = $("fUid").value.trim().toLowerCase(), nm = $("fName").value.trim().toLowerCase();
+  const course = $("fCourse").value, status = $("fStatus").value, from = $("fFrom").value, to = $("fTo").value, sort = $("fSort").value;
+  const rows = lib.filter(i => {
+    if (q && !match(q, i.name, i.uid, i.course)) return false;
+    if (uid && !String(i.uid || "").toLowerCase().includes(uid)) return false;
+    if (nm && !String(i.name || "").toLowerCase().includes(nm)) return false;
+    if (course && i.course !== course) return false;
+    if (status && libState(i) !== status) return false;
+    const t = i.checkedInAt && i.checkedInAt.toDate ? dayKey(i.checkedInAt.toDate()) : "";
+    if (from && (!t || t < from)) return false;
+    if (to && (!t || t > to)) return false;
+    return true;
+  });
+  const ms = x => x && x.toMillis ? x.toMillis() : 0;
+  const len = i => ms(i.checkedOutAt) && ms(i.checkedInAt) ? ms(i.checkedOutAt) - ms(i.checkedInAt) : -1;
+  if (sort === "old") rows.sort((a, b) => ms(a.checkedInAt) - ms(b.checkedInAt));
+  else if (sort === "long") rows.sort((a, b) => len(b) - len(a));
+  else if (sort === "short") rows.sort((a, b) => { const x = len(a), y = len(b); return (x < 0) - (y < 0) || x - y; });
+  return rows;
+}
+function libSummary(rows) {
+  const done = rows.filter(i => i.checkedInAt && i.checkedInAt.toMillis && i.checkedOutAt && i.checkedOutAt.toMillis);
+  const avg = done.length ? Math.round(done.reduce((s, i) => s + (i.checkedOutAt.toMillis() - i.checkedInAt.toMillis()), 0) / done.length / 60000) : 0;
+  const students = new Set(rows.map(i => i.uid || i.name)).size;
+  $("libSum").textContent = "Showing " + rows.length + " of " + lib.length + " visits · " + students + " student" + (students === 1 ? "" : "s") +
+    (done.length ? " · average stay " + mtxt(avg) : "");
+}
+["fUid", "fName"].forEach(id => $(id).addEventListener("input", render));
+["fCourse", "fStatus", "fFrom", "fTo", "fSort"].forEach(id => $(id).addEventListener("change", render));
+$("fToday").addEventListener("click", () => { $("fFrom").value = $("fTo").value = daysAgo(0); render(); });
+$("fWeek").addEventListener("click", () => { $("fFrom").value = daysAgo(6); $("fTo").value = daysAgo(0); render(); });
+$("fClear").addEventListener("click", () => {
+  ["fUid", "fName", "fCourse", "fStatus", "fFrom", "fTo"].forEach(id => $(id).value = "");
+  $("fSort").value = "new"; $("q").value = ""; render();
+});
+</script>
+</body>
+</html>

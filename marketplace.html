@@ -1,0 +1,570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusConnect | Buy &amp; Sell</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceeff;--surface:#f4f5ff;--text:#2e2a4f;--muted:#7d79a0;--purple:#8b6cff;--pink:#ff8fbd;--blue:#6fb4ff;--mint:#6fe0c0;
+--clay:10px 10px 22px rgba(130,118,200,.32),-10px -10px 22px rgba(255,255,255,.95),inset -6px -6px 12px rgba(130,118,200,.16),inset 6px 6px 12px rgba(255,255,255,.9);
+--clay-hover:14px 18px 30px rgba(130,118,200,.38),-10px -10px 24px #fff,inset -6px -6px 12px rgba(130,118,200,.16),inset 6px 6px 12px rgba(255,255,255,.95);
+--press:inset 8px 8px 16px rgba(130,118,200,.28),inset -8px -8px 16px rgba(255,255,255,.95);
+--field:inset 5px 5px 11px rgba(130,118,200,.24),inset -5px -5px 11px rgba(255,255,255,.95);
+--btn:8px 10px 20px rgba(123,92,245,.4),inset -5px -6px 10px rgba(60,30,140,.35),inset 5px 5px 10px rgba(255,255,255,.4)}
+*{margin:0;padding:0;box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{min-height:100vh;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+body::before,body::after{content:"";position:fixed;width:380px;height:380px;border-radius:50%;filter:blur(70px);opacity:.55;pointer-events:none;z-index:-1;animation:floatGlow 10s ease-in-out infinite alternate}
+body::before{background:#ffc4dd;top:-130px;left:-110px}
+body::after{background:#b8d9ff;bottom:-140px;right:-90px;animation-delay:-4s}
+button{font:inherit;color:inherit}
+
+#guard{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--bg);transition:opacity .4s}
+#guard::after{content:"";width:40px;height:40px;border-radius:50%;border:5px solid rgba(139,108,255,.18);border-top-color:var(--purple);animation:spin .8s linear infinite}
+body.ready #guard{opacity:0;pointer-events:none}
+#app{opacity:0}
+body.ready #app{opacity:1;transition:opacity .5s .1s}
+
+.nav{position:sticky;top:12px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:12px 16px 0;padding:12px 20px;border-radius:30px;background:var(--surface);box-shadow:var(--clay)}
+.brand{display:flex;align-items:center;gap:11px;font-size:19px;font-weight:900;letter-spacing:-.4px;text-decoration:none;color:inherit}
+.brand span{color:var(--purple)}
+.brand-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:14px;font-size:19px;color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:5px 6px 12px rgba(123,92,245,.4),inset -3px -3px 6px rgba(60,30,140,.35),inset 3px 3px 6px rgba(255,255,255,.45);transition:transform .4s}
+.brand:hover .brand-icon{transform:rotate(180deg) scale(1.1)}
+.links{display:flex;gap:6px}
+.links a{padding:10px 16px;border-radius:16px;color:var(--muted);font-size:13px;font-weight:800;text-decoration:none;transition:color .25s,box-shadow .25s,transform .25s}
+.links a:hover{color:var(--purple);transform:translateY(-2px);box-shadow:var(--clay)}
+.links a.active{color:var(--purple);box-shadow:var(--press)}
+.user{display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:15px;font-weight:900;color:#fff;background:linear-gradient(145deg,#ffb6d3,#ff8fbd);box-shadow:5px 6px 12px rgba(255,143,189,.45),inset -3px -3px 6px rgba(190,60,110,.3),inset 3px 3px 6px rgba(255,255,255,.55)}
+.user-name{font-size:13px;font-weight:800;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logout{border:none;background:var(--surface);font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:16px;cursor:pointer;box-shadow:var(--clay);transition:transform .25s,box-shadow .25s,color .25s}
+.logout:hover{transform:translateY(-3px);box-shadow:var(--clay-hover);color:#e0457f}
+.logout:active{transform:translateY(1px);box-shadow:var(--press)}
+
+.wrap{width:100%;max-width:1100px;margin:0 auto;padding:0 24px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:48px 0 26px}
+.head h1{font-size:clamp(32px,5vw,48px);font-weight:900;letter-spacing:-1.5px;line-height:1.1}
+.head p{color:var(--muted);font-weight:600;margin-top:8px}
+.grad{background:linear-gradient(90deg,#7c5cff,#ff6fa5,#4aa3ff,#7c5cff);background-size:200% auto;-webkit-background-clip:text;background-clip:text;color:transparent;animation:shine 6s linear infinite}
+
+.btn{display:inline-block;border:none;border-radius:22px;color:#fff;font-size:14px;font-weight:800;padding:15px 26px;cursor:pointer;position:relative;overflow:hidden;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:var(--btn);transition:transform .25s,box-shadow .25s}
+.btn::before{content:"";position:absolute;top:0;left:-120%;height:100%;width:60%;transform:skewX(-20deg);background:linear-gradient(90deg,transparent,rgba(255,255,255,.35),transparent);transition:left .65s}
+.btn:hover{transform:translateY(-4px);box-shadow:12px 16px 28px rgba(123,92,245,.45),inset -5px -6px 10px rgba(60,30,140,.35),inset 5px 5px 10px rgba(255,255,255,.4)}
+.btn:hover::before{left:150%}
+.btn:active{transform:translateY(1px)}
+.btn:disabled{opacity:.7;cursor:wait;transform:none}
+.btn.soft{background:var(--surface);color:var(--text);box-shadow:var(--clay)}
+.btn.soft:hover{box-shadow:var(--clay-hover)}
+.btn.danger{background:linear-gradient(145deg,#ff9db7,#ee5c86);box-shadow:8px 10px 20px rgba(238,92,134,.35),inset -5px -6px 10px rgba(150,20,60,.3),inset 5px 5px 10px rgba(255,255,255,.4)}
+
+.tools{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:28px}
+.search{flex:1 1 240px}
+.field-in,.search input,select.field-in{width:100%;height:50px;padding:0 18px;border:none;border-radius:20px;background:#eceeff;box-shadow:var(--field);color:var(--text);outline:none;font-family:inherit;font-size:14px;font-weight:700;transition:box-shadow .25s}
+.field-in:focus,.search input:focus{box-shadow:var(--field),0 0 0 3px rgba(139,108,255,.4)}
+.field-in::placeholder,.search input::placeholder{color:#a9a6c6;font-weight:600}
+textarea.field-in{height:auto;padding:14px 18px;resize:vertical;min-height:90px;line-height:1.5}
+select.field-in{cursor:pointer;width:auto;min-width:160px}
+.tabs{display:flex;gap:6px;padding:6px;border-radius:22px;background:#e8eaff;box-shadow:var(--press)}
+.tab{border:none;background:transparent;color:var(--muted);padding:11px 18px;border-radius:16px;font-size:13px;font-weight:800;cursor:pointer;transition:all .25s}
+.tab:hover{color:var(--purple)}
+.tab.on{color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:5px 6px 12px rgba(123,92,245,.4),inset -3px -3px 6px rgba(60,30,140,.35),inset 3px 3px 6px rgba(255,255,255,.4)}
+
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:26px;margin-bottom:60px}
+.item{text-align:left;border:none;cursor:pointer;padding:14px 14px 18px;border-radius:32px;background:var(--surface);box-shadow:var(--clay);display:flex;flex-direction:column;gap:12px;animation:rise .5s both;animation-delay:calc(var(--i,0) * 45ms);transition:transform .35s cubic-bezier(.2,.8,.2,1),box-shadow .35s}
+.item:hover{transform:translateY(-8px);box-shadow:var(--clay-hover)}
+.item:active{transform:translateY(-1px);box-shadow:var(--press)}
+.media{position:relative;height:170px;border-radius:24px;overflow:hidden;display:grid;place-items:center;font-size:58px;box-shadow:inset -4px -4px 10px rgba(0,0,0,.08),inset 4px 4px 10px rgba(255,255,255,.55)}
+.media img{width:100%;height:100%;object-fit:cover;display:block;transition:transform .5s}
+.item:hover .media img{transform:scale(1.08)}
+.pill{position:absolute;top:10px;left:10px;padding:6px 12px;border-radius:14px;font-size:11px;font-weight:900;color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:3px 4px 8px rgba(123,92,245,.4),inset 2px 2px 4px rgba(255,255,255,.4)}
+.pill.buy{background:linear-gradient(145deg,#7fd6ff,#4aa3ff)}
+.pill.you{left:auto;right:10px;background:linear-gradient(145deg,#a2f0d8,#3fcf9f)}
+.pill.sample{left:auto;right:10px;background:linear-gradient(145deg,#ffd07a,#ffb03b);color:#5c3b00}
+.item h3{font-size:16px;font-weight:900;padding:0 6px;line-height:1.3}
+.price{padding:0 6px;font-size:20px;font-weight:900;color:var(--purple)}
+.meta{padding:0 6px;font-size:12px;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.empty{grid-column:1/-1;text-align:center;padding:50px 20px;border-radius:32px;background:var(--surface);box-shadow:var(--press);color:var(--muted);font-weight:700}
+
+dialog{border:none;border-radius:36px;background:var(--surface);color:var(--text);box-shadow:var(--clay);padding:0;width:min(680px,94vw);max-height:92vh;overflow:auto;margin:auto}
+dialog[open]{animation:pop .3s cubic-bezier(.2,.8,.2,1)}
+dialog::backdrop{background:rgba(120,108,190,.4);backdrop-filter:blur(4px)}
+.dlg{padding:30px}
+.dlg h2{font-size:26px;font-weight:900;letter-spacing:-.6px;margin-bottom:20px;padding-right:44px}
+.x{position:absolute;top:18px;right:18px;width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;font-size:18px;font-weight:900;background:var(--surface);box-shadow:var(--clay);transition:transform .25s,box-shadow .25s}
+.x:hover{transform:rotate(90deg)}
+.x:active{box-shadow:var(--press)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f{margin-bottom:16px}
+.f label,.f .lbl{display:block;font-size:13px;font-weight:800;margin-bottom:8px}
+.drop{display:grid;place-items:center;text-align:center;padding:22px;border-radius:24px;background:#eceeff;box-shadow:var(--field);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer;transition:box-shadow .25s}
+.drop:hover,.drop.over{box-shadow:var(--field),0 0 0 3px rgba(139,108,255,.4)}
+.drop b{font-size:30px;display:block;margin-bottom:4px}
+.thumbs{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.th{position:relative;width:84px;height:84px;border-radius:20px;overflow:hidden;box-shadow:var(--clay)}
+.th img{width:100%;height:100%;object-fit:cover}
+.th button{position:absolute;top:4px;right:4px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(46,42,79,.75);color:#fff;font-size:12px;font-weight:900;cursor:pointer}
+.err{display:none;margin-bottom:14px;padding:12px 16px;border-radius:18px;background:#ffe4ed;color:#c93a69;font-size:13px;font-weight:700}
+.err.show{display:block}
+.big{height:300px;border-radius:28px;overflow:hidden;display:grid;place-items:center;font-size:90px;margin-bottom:12px;box-shadow:inset -4px -4px 10px rgba(0,0,0,.08),inset 4px 4px 10px rgba(255,255,255,.55)}
+.big img{width:100%;height:100%;object-fit:contain;background:#eceeff}
+.gal{display:flex;gap:10px;margin-bottom:18px}
+.gal button{width:64px;height:64px;border:none;border-radius:16px;overflow:hidden;cursor:pointer;padding:0;box-shadow:var(--clay)}
+.gal button.on{box-shadow:var(--press),0 0 0 3px var(--purple)}
+.gal img{width:100%;height:100%;object-fit:cover}
+.det .price{padding:0;font-size:28px;margin:4px 0 12px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+.tag{padding:7px 14px;border-radius:14px;font-size:12px;font-weight:800;color:var(--purple);background:#eceeff;box-shadow:var(--field)}
+.desc{line-height:1.7;font-weight:600;color:#4a466b;margin-bottom:18px;white-space:pre-wrap;word-break:break-word}
+.seller{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:22px;background:#eceeff;box-shadow:var(--field);margin-bottom:18px;font-weight:800;font-size:14px}
+.seller small{display:block;color:var(--muted);font-weight:700;font-size:12px}
+.acts{display:flex;gap:12px;flex-wrap:wrap}
+.acts a{text-decoration:none}
+
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,30px);opacity:0;z-index:200;padding:14px 24px;border-radius:22px;font-size:14px;font-weight:800;background:var(--surface);box-shadow:var(--clay);transition:all .35s;pointer-events:none;max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+
+@keyframes floatGlow{to{transform:translate(50px,35px) scale(1.12)}}
+@keyframes spin{to{transform:rotate(360deg)}}
+@keyframes shine{to{background-position:200% center}}
+@keyframes rise{from{opacity:0;transform:translateY(26px) scale(.96)}to{opacity:1;transform:none}}
+@keyframes pop{from{opacity:0;transform:translateY(20px) scale(.95)}to{opacity:1;transform:none}}
+@media(max-width:800px){.links{display:none}}
+@media(max-width:560px){.nav{margin:10px 10px 0;padding:10px 14px}.user-name{display:none}.wrap{padding:0 14px}.row{grid-template-columns:1fr}.dlg{padding:22px 18px}.big{height:230px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="guard" aria-label="Checking login"></div>
+
+<div id="app">
+  <header class="nav">
+    <a class="brand" href="home.html"><div class="brand-icon">✦</div><div>Campus<span>Connect</span></div></a>
+    <nav class="links" aria-label="Main">
+      <a href="home.html">Home</a>
+      <a href="marketplace.html" class="active">Buy &amp; Sell</a>
+    </nav>
+    <div class="user">
+      <div class="avatar" id="avatar">?</div>
+      <div class="user-name" id="userName"></div>
+      <button class="logout" id="logoutBtn" type="button">Log out</button>
+    </div>
+  </header>
+
+  <main class="wrap">
+    <section class="head">
+      <div>
+        <h1>Campus <span class="grad">Buy &amp; Sell</span></h1>
+        <p>Find a bargain from another student, or post something of your own.</p>
+      </div>
+      <button class="btn" id="postBtn" type="button">+ Post an item</button>
+    </section>
+
+    <section class="tools">
+      <div class="search"><input id="q" type="search" placeholder="Search books, cycles, calculators…" aria-label="Search listings"></div>
+      <div class="tabs" id="typeTabs">
+        <button class="tab on" data-type="all" type="button">All</button>
+        <button class="tab" data-type="sell" type="button">For sale</button>
+        <button class="tab" data-type="buy" type="button">Wanted</button>
+      </div>
+      <select class="field-in" id="catFilter" aria-label="Category"></select>
+    </section>
+
+    <section class="grid" id="grid" aria-live="polite"></section>
+  </main>
+</div>
+
+<!-- Post dialog -->
+<dialog id="postDlg">
+  <div class="dlg">
+    <button class="x" type="button" data-close aria-label="Close">✕</button>
+    <h2>Post an item</h2>
+    <form id="postForm" novalidate>
+      <div class="f">
+        <span class="lbl">What do you want to do?</span>
+        <div class="tabs" id="kind">
+          <button class="tab on" type="button" data-kind="sell" style="flex:1">I want to sell</button>
+          <button class="tab" type="button" data-kind="buy" style="flex:1">I want to buy</button>
+        </div>
+      </div>
+      <div class="f"><label for="title">Title</label><input class="field-in" id="title" maxlength="80" placeholder="e.g. Casio fx-991ES calculator" required></div>
+      <div class="row">
+        <div class="f"><label for="cat">Category</label><select class="field-in" id="cat" style="width:100%"></select></div>
+        <div class="f"><label for="price" id="priceLbl">Price (₹)</label><input class="field-in" id="price" type="number" min="0" max="10000000" step="1" placeholder="e.g. 500" required></div>
+      </div>
+      <div class="row">
+        <div class="f" id="condWrap"><label for="cond">Condition</label>
+          <select class="field-in" id="cond" style="width:100%"><option>Like new</option><option selected>Good</option><option>Fair</option><option>Needs repair</option></select></div>
+        <div class="f"><label for="phone">Phone / WhatsApp (optional)</label><input class="field-in" id="phone" type="tel" maxlength="15" placeholder="Shown to logged-in students"></div>
+      </div>
+      <div class="f"><label for="desc">Description</label><textarea class="field-in" id="desc" maxlength="600" placeholder="Age, edition, reason for selling, pickup spot…"></textarea></div>
+      <div class="f">
+        <span class="lbl" id="imgLbl">Photos (up to 3)</span>
+        <label class="drop" id="drop" for="files"><div><b>📷</b>Click to upload or drop images here</div></label>
+        <input id="files" type="file" accept="image/*" multiple hidden>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+      <div class="err" id="err" role="alert"></div>
+      <div class="acts"><button class="btn" id="submitBtn" type="submit">Post listing</button><button class="btn soft" type="button" data-close>Cancel</button></div>
+    </form>
+  </div>
+</dialog>
+
+<!-- Detail dialog -->
+<dialog id="viewDlg"><div class="dlg det" id="viewBody"></div></dialog>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, deleteDoc, doc, query, orderBy, limit, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const LOGIN_PAGE = "login.html";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCKfSjhTBaoK9Kjm_NFx7I0Yf8WT7vyWPo",
+  authDomain: "universityconnect-culko.firebaseapp.com",
+  projectId: "universityconnect-culko",
+  storageBucket: "universityconnect-culko.firebasestorage.app",
+  messagingSenderId: "1045958757342",
+  appId: "1:1045958757342:web:a22f5aecc6b97e982a6b4f",
+  measurementId: "G-3KFVCBL1M2"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+const CATS = {
+  "Books": ["📘", "#c4e0ff", "#8fc2ff"], "Electronics": ["🔌", "#ffe9b0", "#ffcd66"],
+  "Furniture": ["🪑", "#b4f3de", "#7de6c6"], "Cycles & Vehicles": ["🚲", "#ffcfe2", "#ff9fc7"],
+  "Clothing": ["👕", "#e0d4ff", "#b49cff"], "Stationery": ["✏️", "#ffdfbd", "#ffbb7d"], "Other": ["📦", "#dcdff7", "#b8bdea"]
+};
+
+// Sample listings (shown to everyone so the page is never empty)
+const SAMPLES = [
+  { id: "s1", sample: true, type: "sell", title: "Engineering Mathematics Textbook", category: "Books", price: 250, condition: "Good", description: "B.S. Grewal, 43rd edition. A few highlighted pages, no torn pages. Useful for first and second year.", sellerName: "Aarav", ago: "2 days ago" },
+  { id: "s2", sample: true, type: "sell", title: "Hero Sprint Cycle (21 gears)", category: "Cycles & Vehicles", price: 3500, condition: "Good", description: "Used for one year around campus. New tyres, working brakes. Pickup near the hostel gate.", sellerName: "Meera", ago: "3 days ago" },
+  { id: "s3", sample: true, type: "sell", title: "Casio fx-991ES Plus Calculator", category: "Electronics", price: 600, condition: "Like new", description: "Allowed in exams. Comes with the cover and a fresh battery.", sellerName: "Rohan", ago: "5 days ago" },
+  { id: "s4", sample: true, type: "sell", title: "Study Table Lamp (LED)", category: "Furniture", price: 300, condition: "Like new", description: "Three brightness levels, USB powered. Selling because I'm moving out.", sellerName: "Sana", ago: "1 week ago" },
+  { id: "s5", sample: true, type: "buy", title: "Looking for a Data Structures book", category: "Books", price: 300, description: "Need a second-hand DSA book (Karumanchi or similar). Budget up to ₹300.", sellerName: "Kabir", ago: "Yesterday" }
+];
+
+let me = null;
+let listings = [];
+const state = { type: "all", cat: "all", q: "" };
+const $ = id => document.getElementById(id);
+
+// ---------- Helpers ----------
+function el(tag, cls, text) {
+  const n = document.createElement(tag);
+  if (cls) n.className = cls;
+  if (text != null) n.textContent = text;
+  return n;
+}
+const isImg = s => typeof s === "string" && s.startsWith("data:image/jpeg;base64,");
+const money = n => "₹" + Number(n).toLocaleString("en-IN");
+function ago(item) {
+  if (item.sample) return item.ago;
+  const t = item.createdAt && item.createdAt.toMillis ? item.createdAt.toMillis() : Date.now();
+  const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (m < 1) return "Just now";
+  if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60);
+  if (h < 24) return h + " hr ago";
+  const d = Math.round(h / 24);
+  return d + (d === 1 ? " day ago" : " days ago");
+}
+let toastTimer;
+function toast(msg) {
+  const t = $("toast");
+  t.textContent = msg;
+  t.classList.add("show");
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove("show"), 2800);
+}
+function media(item, cls) {
+  const box = el("div", cls);
+  const first = (item.images || []).find(isImg);
+  if (first) {
+    const img = document.createElement("img");
+    img.src = first;
+    img.alt = item.title;
+    img.loading = "lazy";
+    box.appendChild(img);
+  } else {
+    const c = CATS[item.category] || CATS["Other"];
+    box.style.background = `linear-gradient(145deg,${c[1]},${c[2]})`;
+    box.textContent = c[0];
+  }
+  return box;
+}
+
+// ---------- Login guard ----------
+onAuthStateChanged(auth, user => {
+  if (!user) { location.replace(LOGIN_PAGE); return; }
+  me = user;
+  const name = user.displayName || user.email.split("@")[0];
+  $("userName").textContent = name;
+  $("avatar").textContent = name.trim().charAt(0).toUpperCase();
+  document.body.classList.add("ready");
+  startListening();
+});
+window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+$("logoutBtn").addEventListener("click", async () => { await signOut(auth); location.replace(LOGIN_PAGE); });
+
+// ---------- Live listings ----------
+let started = false;
+function startListening() {
+  if (started) return;
+  started = true;
+  const q = query(collection(db, "listings"), orderBy("createdAt", "desc"), limit(100));
+  onSnapshot(q, snap => {
+    listings = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    render();
+  }, err => {
+    console.error(err);
+    toast("Couldn't load listings. Check your Firestore rules.");
+    render();
+  });
+}
+
+// ---------- Filters ----------
+const catFilter = $("catFilter");
+catFilter.appendChild(new Option("All categories", "all"));
+const catSel = $("cat");
+Object.keys(CATS).forEach(c => { catFilter.appendChild(new Option(c, c)); catSel.appendChild(new Option(c, c)); });
+
+$("typeTabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  state.type = b.dataset.type;
+  document.querySelectorAll("#typeTabs .tab").forEach(t => t.classList.toggle("on", t === b));
+  render();
+});
+catFilter.addEventListener("change", () => { state.cat = catFilter.value; render(); });
+$("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
+
+// ---------- Render grid ----------
+function render() {
+  const grid = $("grid");
+  grid.replaceChildren();
+  const all = [...listings, ...SAMPLES].filter(i =>
+    (state.type === "all" || i.type === state.type) &&
+    (state.cat === "all" || i.category === state.cat) &&
+    (!state.q || (i.title + " " + (i.description || "")).toLowerCase().includes(state.q)));
+
+  if (!all.length) {
+    grid.appendChild(el("div", "empty", "Nothing matches your search yet. Try another word, or post the first one."));
+    return;
+  }
+  all.forEach((item, idx) => {
+    const card = el("button", "item");
+    card.type = "button";
+    card.style.setProperty("--i", Math.min(idx, 12));
+    const m = media(item);
+    m.className = "media";
+    m.appendChild(el("span", "pill" + (item.type === "buy" ? " buy" : ""), item.type === "buy" ? "Wanted" : "For sale"));
+    if (item.sample) m.appendChild(el("span", "pill sample", "Sample"));
+    else if (me && item.sellerId === me.uid) m.appendChild(el("span", "pill you", "Yours"));
+    card.append(m, el("h3", "", item.title), el("div", "price", (item.type === "buy" ? "Budget " : "") + money(item.price)));
+    const meta = el("div", "meta");
+    meta.append(el("span", "", item.category), el("span", "", ago(item)));
+    card.appendChild(meta);
+    card.addEventListener("click", () => openDetail(item));
+    grid.appendChild(card);
+  });
+}
+
+// ---------- Detail dialog ----------
+const viewDlg = $("viewDlg");
+function openDetail(item) {
+  const body = $("viewBody");
+  body.replaceChildren();
+  const x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Close");
+  x.addEventListener("click", () => viewDlg.close());
+  body.appendChild(x);
+
+  const imgs = (item.images || []).filter(isImg);
+  const big = media(imgs.length ? { ...item, images: [imgs[0]] } : item, "big");
+  body.appendChild(big);
+  if (imgs.length > 1) {
+    const gal = el("div", "gal");
+    imgs.forEach((src, i) => {
+      const b = el("button", i === 0 ? "on" : ""); b.type = "button";
+      const im = document.createElement("img"); im.src = src; im.alt = "Photo " + (i + 1);
+      b.appendChild(im);
+      b.addEventListener("click", () => {
+        big.querySelector("img").src = src;
+        gal.querySelectorAll("button").forEach(g => g.classList.toggle("on", g === b));
+      });
+      gal.appendChild(b);
+    });
+    body.appendChild(gal);
+  }
+
+  body.appendChild(el("h2", "", item.title));
+  body.appendChild(el("div", "price", (item.type === "buy" ? "Budget " : "") + money(item.price)));
+  const tags = el("div", "tags");
+  tags.append(el("span", "tag", item.type === "buy" ? "Wanted" : "For sale"), el("span", "tag", item.category));
+  if (item.condition && item.type !== "buy") tags.appendChild(el("span", "tag", item.condition));
+  tags.appendChild(el("span", "tag", ago(item)));
+  body.appendChild(tags);
+  if (item.description) body.appendChild(el("p", "desc", item.description));
+
+  const seller = el("div", "seller");
+  const av = el("div", "avatar", (item.sellerName || "?").charAt(0).toUpperCase());
+  const who = el("div", "", item.sellerName || "Student");
+  if (item.contactPhone) who.appendChild(el("small", "", "📞 " + item.contactPhone));
+  seller.append(av, who);
+  body.appendChild(seller);
+
+  const acts = el("div", "acts");
+  const mine = me && item.sellerId === me.uid;
+  if (item.sample) {
+    const b = el("button", "btn", item.type === "buy" ? "I have this" : "Contact seller"); b.type = "button";
+    b.addEventListener("click", () => toast("This is a sample listing. Real listings show a contact button."));
+    acts.appendChild(b);
+  } else if (mine) {
+    const b = el("button", "btn danger", "Remove listing"); b.type = "button";
+    b.addEventListener("click", async () => {
+      if (!confirm("Remove this listing? This can't be undone.")) return;
+      try { await deleteDoc(doc(db, "listings", item.id)); viewDlg.close(); toast("Listing removed."); }
+      catch (e) { console.error(e); toast("Couldn't remove it. Please try again."); }
+    });
+    acts.appendChild(b);
+  } else if (item.sellerEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.sellerEmail)) {
+    const a = el("a", "btn", item.type === "buy" ? "I have this" : "Contact seller");
+    a.href = "mailto:" + item.sellerEmail + "?subject=" + encodeURIComponent("CampusConnect: " + item.title);
+    acts.appendChild(a);
+  }
+  const close = el("button", "btn soft", "Close"); close.type = "button";
+  close.addEventListener("click", () => viewDlg.close());
+  acts.appendChild(close);
+  body.appendChild(acts);
+  viewDlg.showModal();
+}
+
+// ---------- Post dialog ----------
+const postDlg = $("postDlg");
+const form = $("postForm");
+let kind = "sell";
+let pending = [];
+
+function setKind(k) {
+  kind = k;
+  document.querySelectorAll("#kind .tab").forEach(t => t.classList.toggle("on", t.dataset.kind === k));
+  $("priceLbl").textContent = k === "buy" ? "Your budget (₹)" : "Price (₹)";
+  $("condWrap").style.display = k === "buy" ? "none" : "";
+  $("imgLbl").textContent = k === "buy" ? "Photos (optional, up to 3)" : "Photos (at least 1, up to 3)";
+}
+$("kind").addEventListener("click", e => { const b = e.target.closest(".tab"); if (b) setKind(b.dataset.kind); });
+
+function showErr(msg) { const e = $("err"); e.textContent = msg || ""; e.classList.toggle("show", !!msg); }
+
+function drawThumbs() {
+  const box = $("thumbs");
+  box.replaceChildren();
+  pending.forEach((src, i) => {
+    const t = el("div", "th");
+    const im = document.createElement("img"); im.src = src; im.alt = "Selected photo " + (i + 1);
+    const rm = el("button", "", "✕"); rm.type = "button"; rm.setAttribute("aria-label", "Remove photo");
+    rm.addEventListener("click", () => { pending.splice(i, 1); drawThumbs(); });
+    t.append(im, rm);
+    box.appendChild(t);
+  });
+}
+
+// Shrink photos so they fit comfortably inside a Firestore document
+function compress(file) {
+  return new Promise((resolve, reject) => {
+    const url = URL.createObjectURL(file);
+    const img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const s = Math.min(1, 800 / Math.max(img.width, img.height));
+      const c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.width * s));
+      c.height = Math.max(1, Math.round(img.height * s));
+      const ctx = c.getContext("2d");
+      ctx.fillStyle = "#fff"; ctx.fillRect(0, 0, c.width, c.height);
+      ctx.drawImage(img, 0, 0, c.width, c.height);
+      resolve(c.toDataURL("image/jpeg", 0.72));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); reject(new Error("bad image")); };
+    img.src = url;
+  });
+}
+
+async function addFiles(fileList) {
+  showErr("");
+  const files = [...fileList].filter(f => f.type.startsWith("image/"));
+  if (!files.length) return showErr("Please choose image files (JPG, PNG or WebP).");
+  for (const f of files) {
+    if (pending.length >= 3) { showErr("You can add up to 3 photos."); break; }
+    if (f.size > 10 * 1024 * 1024) { showErr("Each photo must be under 10 MB."); continue; }
+    try { pending.push(await compress(f)); } catch { showErr("One of the files couldn't be read as an image."); }
+  }
+  drawThumbs();
+}
+$("files").addEventListener("change", e => { addFiles(e.target.files); e.target.value = ""; });
+const drop = $("drop");
+["dragenter", "dragover"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add("over"); }));
+["dragleave", "drop"].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove("over"); }));
+drop.addEventListener("drop", e => addFiles(e.dataTransfer.files));
+
+$("postBtn").addEventListener("click", () => {
+  form.reset(); pending = []; drawThumbs(); setKind("sell"); showErr("");
+  postDlg.showModal();
+  $("title").focus();
+});
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => postDlg.close()));
+[postDlg, viewDlg].forEach(d => d.addEventListener("click", e => { if (e.target === d) d.close(); }));
+
+form.addEventListener("submit", async e => {
+  e.preventDefault();
+  showErr("");
+  const title = $("title").value.trim();
+  const price = Number($("price").value);
+  const phone = $("phone").value.trim();
+  const description = $("desc").value.trim();
+
+  if (title.length < 3) return showErr("Add a title of at least 3 characters.");
+  if ($("price").value === "" || !Number.isFinite(price) || price < 0) return showErr("Enter a valid price.");
+  if (phone && !/^[0-9+\-\s]{7,15}$/.test(phone)) return showErr("Phone number can only contain digits, spaces, + and -.");
+  if (kind === "sell" && !pending.length) return showErr("Add at least one photo so buyers can see your item.");
+  if (pending.join("").length > 750000) return showErr("Photos are too large together. Remove one or choose smaller images.");
+
+  const btn = $("submitBtn");
+  btn.disabled = true; btn.textContent = "Posting…";
+  try {
+    await addDoc(collection(db, "listings"), {
+      type: kind,
+      title,
+      category: $("cat").value,
+      price: Math.round(price),
+      condition: kind === "sell" ? $("cond").value : "",
+      description,
+      contactPhone: phone,
+      images: pending,
+      sellerId: me.uid,
+      sellerName: me.displayName || me.email.split("@")[0],
+      sellerEmail: me.email,
+      createdAt: serverTimestamp()
+    });
+    postDlg.close();
+    toast("Your listing is live!");
+  } catch (err) {
+    console.error(err);
+    showErr("Couldn't post your listing. Check your connection and Firestore rules, then try again.");
+  } finally {
+    btn.disabled = false; btn.textContent = "Post listing";
+  }
+});
+
+render();
+</script>
+</body>
+</html>

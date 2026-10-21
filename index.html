@@ -1,0 +1,995 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CampusConnect | Student Portal</title>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+
+    <style>
+        :root {
+            --bg: #eceeff;
+            --surface: #f4f5ff;
+            --text: #2e2a4f;
+            --muted: #7d79a0;
+            --purple: #8b6cff;
+            --mint: #6fe0c0;
+            --clay: 10px 10px 22px rgba(130,118,200,.32), -10px -10px 22px rgba(255,255,255,.95), inset -6px -6px 12px rgba(130,118,200,.16), inset 6px 6px 12px rgba(255,255,255,.9);
+            --press: inset 8px 8px 16px rgba(130,118,200,.28), inset -8px -8px 16px rgba(255,255,255,.95);
+            --field: inset 5px 5px 11px rgba(130,118,200,.24), inset -5px -5px 11px rgba(255,255,255,.95);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            min-height: 100vh;
+            font-family: 'Nunito', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 30px 16px;
+            overflow-x: hidden;
+            position: relative;
+        }
+
+        /* Soft floating colour blobs */
+        body::before, body::after {
+            content: "";
+            position: fixed;
+            width: 380px;
+            height: 380px;
+            border-radius: 50%;
+            filter: blur(70px);
+            opacity: .55;
+            pointer-events: none;
+            z-index: -1;
+            animation: floatGlow 10s ease-in-out infinite alternate;
+        }
+        body::before { background: #ffc4dd; top: -130px; left: -110px; }
+        body::after { background: #b8d9ff; bottom: -140px; right: -90px; animation-delay: -4s; }
+
+        .page {
+            width: 100%;
+            max-width: 1040px;
+            display: grid;
+            grid-template-columns: 1fr 0.95fr;
+            background: var(--surface);
+            border-radius: 40px;
+            overflow: hidden;
+            box-shadow: var(--clay);
+            animation: pageEnter .8s ease both;
+        }
+
+        /* Left brand panel */
+        .brand-panel {
+            padding: 52px 42px;
+            background: linear-gradient(145deg, #ebe7ff, #e0e6ff);
+            box-shadow: inset -10px 0 24px rgba(130,118,200,.14);
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            min-height: 650px;
+        }
+
+        .brand { display: flex; align-items: center; gap: 12px; font-size: 19px; font-weight: 900; letter-spacing: -0.4px; }
+        .brand span { color: var(--purple); }
+
+        .brand-icon {
+            width: 42px; height: 42px;
+            display: grid; place-items: center;
+            border-radius: 14px;
+            font-size: 22px;
+            color: #fff;
+            background: linear-gradient(145deg, #a58bff, #7b5cf5);
+            box-shadow: 5px 6px 12px rgba(123,92,245,.4), inset -3px -3px 6px rgba(60,30,140,.35), inset 3px 3px 6px rgba(255,255,255,.45);
+        }
+
+        .hero-content { margin-top: 50px; margin-bottom: 45px; }
+
+        .badge {
+            display: inline-flex; align-items: center; gap: 9px;
+            padding: 10px 18px;
+            border-radius: 30px;
+            background: var(--surface);
+            box-shadow: var(--clay);
+            color: var(--purple);
+            font-size: 11px; font-weight: 800;
+            letter-spacing: 1px; text-transform: uppercase;
+            margin-bottom: 26px;
+        }
+
+        .status-dot {
+            width: 9px; height: 9px; border-radius: 50%;
+            background: var(--mint);
+            box-shadow: 0 0 0 3px rgba(111,224,192,.3);
+            animation: pulse 1.8s infinite;
+        }
+
+        .hero-content h1 {
+            font-size: clamp(36px, 4vw, 51px);
+            line-height: 1.1;
+            letter-spacing: -2px;
+            font-weight: 900;
+            margin-bottom: 20px;
+        }
+
+        .gradient-text {
+            background: linear-gradient(90deg, #7c5cff, #ff6fa5, #4aa3ff, #7c5cff);
+            background-size: 200% auto;
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            animation: shine 6s linear infinite;
+        }
+
+        .hero-content p { max-width: 370px; color: var(--muted); line-height: 1.8; font-size: 14px; font-weight: 600; }
+
+        .feature-list { display: grid; gap: 16px; margin-top: 34px; }
+        .feature { display: flex; align-items: center; gap: 14px; color: #4a466b; font-size: 13px; font-weight: 700; }
+        .feature-icon {
+            width: 40px; height: 40px; flex-shrink: 0;
+            display: grid; place-items: center;
+            border-radius: 14px;
+            background: var(--surface);
+            box-shadow: 5px 6px 12px rgba(130,118,200,.28), -4px -4px 10px rgba(255,255,255,.9), inset -3px -3px 6px rgba(130,118,200,.12), inset 3px 3px 6px rgba(255,255,255,.8);
+        }
+
+        .brand-footer { color: var(--muted); font-size: 11px; line-height: 1.7; font-weight: 700; }
+
+        /* Right form panel */
+        .form-panel { padding: 42px 38px; display: flex; flex-direction: column; justify-content: center; }
+        .mobile-brand { display: none; }
+        .mobile-brand span { color: var(--purple) !important; }
+
+        .form-heading { margin-bottom: 26px; }
+        .form-heading h2 { font-size: 28px; letter-spacing: -1px; font-weight: 900; margin-bottom: 9px; }
+        .form-heading p { color: var(--muted); font-size: 13px; line-height: 1.6; font-weight: 600; }
+
+        .tabs {
+            display: grid; grid-template-columns: 1fr 1fr;
+            padding: 6px; gap: 6px;
+            border-radius: 22px;
+            background: #e8eaff;
+            box-shadow: var(--press);
+            margin-bottom: 25px;
+        }
+        .tab {
+            border: none; padding: 12px;
+            background: transparent; color: var(--muted);
+            border-radius: 16px; cursor: pointer;
+            font: inherit; font-size: 13px; font-weight: 800;
+            transition: all .25s ease;
+        }
+        .tab:hover { color: var(--purple); }
+        .tab.active {
+            color: #fff;
+            background: linear-gradient(145deg, #a58bff, #7b5cf5);
+            box-shadow: 5px 6px 12px rgba(123,92,245,.4), inset 3px 3px 6px rgba(255,255,255,.4);
+        }
+
+        .form-view { animation: formEnter .35s ease both; }
+        .form-view[hidden] { display: none; }
+
+        .field { margin-bottom: 17px; }
+        .field label { display: block; font-size: 12px; font-weight: 800; color: var(--text); margin-bottom: 9px; }
+        .input-wrap { position: relative; }
+
+        .input-wrap input, .input-wrap select {
+            width: 100%; height: 50px;
+            padding: 0 18px;
+            border: none; border-radius: 18px;
+            background: #eceeff;
+            box-shadow: var(--field);
+            color: var(--text);
+            outline: none;
+            font-family: inherit; font-size: 13px; font-weight: 700;
+            transition: box-shadow .25s;
+        }
+        .input-wrap input::placeholder { color: #a9a6c6; font-weight: 600; }
+        .input-wrap input:focus, .input-wrap select:focus { box-shadow: var(--field), 0 0 0 3px rgba(139,108,255,.4); }
+        .input-wrap select { cursor: pointer; }
+        .input-wrap select option { background: #fff; color: var(--text); }
+        input[type="date"] { color-scheme: light; }
+
+        .password-input { padding-right: 70px !important; }
+        .toggle-password {
+            position: absolute; top: 50%; right: 14px;
+            transform: translateY(-50%);
+            background: none; border: none;
+            color: var(--purple);
+            font-family: inherit; font-size: 11px; font-weight: 800;
+            cursor: pointer; transition: color .2s;
+        }
+        .toggle-password:hover { color: #5a3fd6; }
+
+        .two-column { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+
+        .form-options { display: flex; justify-content: space-between; align-items: center; gap: 10px; margin: 4px 0 22px; }
+        .remember { display: flex; align-items: center; gap: 8px; font-size: 11px; font-weight: 700; color: var(--muted); cursor: pointer; }
+        .remember input { accent-color: var(--purple); width: 15px; height: 15px; cursor: pointer; }
+        .text-button { border: none; background: none; color: var(--purple); font: inherit; font-size: 11px; font-weight: 800; cursor: pointer; }
+        .text-button:hover { color: #5a3fd6; }
+
+        .submit-btn {
+            width: 100%; height: 52px;
+            border: none; border-radius: 22px;
+            color: #fff;
+            font-family: inherit; font-size: 14px; font-weight: 800;
+            cursor: pointer;
+            position: relative; overflow: hidden;
+            background: linear-gradient(145deg, #a58bff, #7b5cf5);
+            box-shadow: 8px 10px 20px rgba(123,92,245,.4), inset -5px -6px 10px rgba(60,30,140,.35), inset 5px 5px 10px rgba(255,255,255,.4);
+            transition: transform .25s, box-shadow .25s;
+        }
+        .submit-btn::before {
+            content: "";
+            position: absolute; top: 0; left: -120%;
+            height: 100%; width: 60%;
+            transform: skewX(-20deg);
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,.35), transparent);
+            transition: left .65s;
+        }
+        .submit-btn:hover {
+            transform: translateY(-4px);
+            box-shadow: 12px 16px 28px rgba(123,92,245,.45), inset -5px -6px 10px rgba(60,30,140,.35), inset 5px 5px 10px rgba(255,255,255,.4);
+        }
+        .submit-btn:hover::before { left: 150%; }
+        .submit-btn:active {
+            transform: translateY(1px);
+            box-shadow: 4px 5px 10px rgba(123,92,245,.4), inset -3px -3px 8px rgba(60,30,140,.4), inset 3px 3px 8px rgba(255,255,255,.3);
+        }
+        .submit-btn:disabled { opacity: .7; cursor: wait; transform: none; }
+
+        .divider { display: flex; align-items: center; gap: 12px; margin: 23px 0; color: var(--muted); font-size: 10px; font-weight: 800; letter-spacing: .5px; }
+        .divider::before, .divider::after { content: ""; flex: 1; height: 2px; border-radius: 2px; background: rgba(130,118,200,.18); }
+
+        .bottom-text { text-align: center; font-size: 11px; line-height: 1.8; font-weight: 700; color: var(--muted); }
+        .bottom-text button { border: none; background: none; color: var(--purple); font: inherit; font-weight: 800; cursor: pointer; }
+        .bottom-text button:hover { color: #5a3fd6; }
+
+        .notice { display: none; margin-bottom: 18px; padding: 13px 16px; border-radius: 18px; font-size: 12px; line-height: 1.6; font-weight: 700; }
+        .notice.show { display: block; animation: formEnter .25s ease both; }
+        .notice.error { color: #c93a69; background: #ffe4ed; box-shadow: inset 3px 3px 7px rgba(201,58,105,.12), inset -3px -3px 7px rgba(255,255,255,.7); }
+        .notice.success { color: #1c7f5f; background: #dcf8ee; box-shadow: inset 3px 3px 7px rgba(28,127,95,.12), inset -3px -3px 7px rgba(255,255,255,.7); }
+
+        .security-note { margin-top: 18px; text-align: center; color: var(--muted); font-size: 10px; line-height: 1.7; font-weight: 700; }
+
+        /* Animations */
+        @keyframes floatGlow { to { transform: translate(50px, 35px) scale(1.12); } }
+        @keyframes pageEnter { from { opacity: 0; transform: translateY(22px) scale(.985); } to { opacity: 1; transform: translateY(0) scale(1); } }
+        @keyframes formEnter { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes pulse { 50% { opacity: .4; } }
+        @keyframes shine { to { background-position: 200% center; } }
+
+        /* Face registration */
+        .face-box { padding: 16px; border-radius: 22px; background: #eceeff; box-shadow: var(--field); margin-bottom: 17px; }
+        .face-title { font-size: 12px; font-weight: 800; margin-bottom: 8px; }
+        .cam { margin: 12px 0; border-radius: 22px; overflow: hidden; background: #1d1a33; aspect-ratio: 4 / 3; }
+        .cam[hidden] { display: none; }
+        .cam video { width: 100%; height: 100%; object-fit: cover; transform: scaleX(-1); }
+        .face-status { font-size: 12px; font-weight: 700; color: var(--muted); margin: 10px 0 12px; line-height: 1.5; }
+        .face-btn { width: 100%; height: 44px; border: none; border-radius: 18px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; background: var(--surface); color: var(--text); box-shadow: var(--clay); }
+        .face-btn:disabled { opacity: .6; cursor: wait; }
+
+        /* Responsive */
+        @media (max-width: 800px) {
+            .page { max-width: 520px; grid-template-columns: 1fr; }
+            .brand-panel { display: none; }
+            .form-panel { padding: 32px 28px; }
+            .mobile-brand { display: flex; align-items: center; gap: 10px; margin-bottom: 34px; font-size: 17px; font-weight: 900; }
+            .mobile-brand .brand-icon { width: 36px; height: 36px; font-size: 18px; border-radius: 11px; }
+        }
+
+        @media (max-width: 420px) {
+            body { padding: 14px 10px; }
+            .page { border-radius: 28px; }
+            .form-panel { padding: 25px 18px; }
+            .form-heading h2 { font-size: 25px; }
+            .two-column { grid-template-columns: 1fr; gap: 0; }
+        }
+
+        @media (prefers-reduced-motion: reduce) {
+            *, *::before, *::after {
+                animation-duration: .01ms !important;
+                animation-iteration-count: 1 !important;
+                scroll-behavior: auto !important;
+                transition-duration: .01ms !important;
+            }
+        }
+    </style>
+</head>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  sendPasswordResetEmail, signOut, deleteUser, updateProfile,
+  setPersistence, browserLocalPersistence, browserSessionPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+
+import {
+  getFirestore, doc, getDoc, runTransaction, serverTimestamp
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+const firebaseConfig = {
+  apiKey: "AIzaSyCKfSjhTBaoK9Kjm_NFx7I0Yf8WT7vyWPo",
+  authDomain: "universityconnect-culko.firebaseapp.com",
+  projectId: "universityconnect-culko",
+  storageBucket: "universityconnect-culko.firebasestorage.app",
+  messagingSenderId: "1045958757342",
+  appId: "1:1045958757342:web:a22f5aecc6b97e982a6b4f",
+  measurementId: "G-3KFVCBL1M2"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const SHEET_URL = "https://script.google.com/macros/s/AKfycbzrMFUecud4QPpRjVb1SuRD264HzWi9RVtwMxa8JxK3SZ5EW3HcWB1qYTBUlwzSIBKplQ/exec";
+const SHEET_TOKEN = "CampusConnect Students";   // same text as in the Apps Script
+
+function saveToSheet(row) {
+  if (!SHEET_URL.startsWith("https://")) return;
+  fetch(SHEET_URL, {
+    method: "POST",
+    mode: "no-cors",
+    headers: { "Content-Type": "text/plain;charset=utf-8" },
+    body: JSON.stringify({ ...row, token: SHEET_TOKEN })
+  }).catch(() => {});
+}
+document.getElementById("year").textContent = new Date().getFullYear();
+
+// ---------- Elements ----------
+const loginTab = document.getElementById("loginTab");
+const signupTab = document.getElementById("signupTab");
+const loginView = document.getElementById("loginView");
+const signupView = document.getElementById("signupView");
+const headingTitle = document.getElementById("headingTitle");
+const headingSubtitle = document.getElementById("headingSubtitle");
+const notice = document.getElementById("notice");
+
+// ---------- Helpers ----------
+function showNotice(message, type = "error") {
+  notice.textContent = message;
+  notice.className = "notice show " + type;
+}
+function clearNotice() {
+  notice.textContent = "";
+  notice.className = "notice";
+}
+function setLoading(form, loading, text) {
+  const btn = form.querySelector(".submit-btn");
+  if (!btn.dataset.label) btn.dataset.label = btn.textContent;
+  btn.disabled = loading;
+  btn.textContent = loading ? text : btn.dataset.label;
+}
+
+// UIDs are case-insensitive and must be safe as a Firestore document ID
+function normalizeUid(uid) { return uid.trim().toLowerCase(); }
+function isValidUid(uid) { return /^[a-z0-9_-]{3,50}$/.test(uid); }
+
+function authErrorMessage(err) {
+  switch (err.code) {
+    case "auth/email-already-in-use": return "An account with this email already exists.";
+    case "auth/weak-password": return "Password is too weak. Use at least 8 characters.";
+    case "auth/invalid-email": return "Enter a valid email address.";
+    case "auth/invalid-credential":
+    case "auth/wrong-password":
+    case "auth/user-not-found": return "Incorrect UID or password.";
+    case "auth/too-many-requests": return "Too many attempts. Please wait a few minutes and try again.";
+    case "auth/network-request-failed": return "Network error. Check your connection.";
+    case "auth/user-disabled": return "Your account has been blocked. Please contact the admin.";
+    default:
+      if (err.message === "UID_TAKEN") return "This College UID is already registered.";
+      console.error(err);
+      return "Something went wrong. Please try again.";
+  }
+}
+
+// ---------- Tab switching ----------
+function switchForm(formName) {
+  clearNotice();
+  const isLogin = formName === "login";
+
+  loginView.hidden = !isLogin;
+  signupView.hidden = isLogin;
+  loginTab.classList.toggle("active", isLogin);
+  signupTab.classList.toggle("active", !isLogin);
+  loginTab.setAttribute("aria-selected", String(isLogin));
+  signupTab.setAttribute("aria-selected", String(!isLogin));
+
+  headingTitle.textContent = isLogin ? "Welcome back 👋" : "Join the community ✨";
+  headingSubtitle.textContent = isLogin
+    ? "Log in to your campus community."
+    : "Create your student account to get started.";
+
+  const activeForm = isLogin ? loginView : signupView;
+  activeForm.style.animation = "none";
+  void activeForm.offsetWidth;
+  activeForm.style.animation = "";
+}
+
+loginTab.addEventListener("click", () => switchForm("login"));
+signupTab.addEventListener("click", () => switchForm("signup"));
+document.querySelectorAll(".switchSignup").forEach(b => b.addEventListener("click", () => switchForm("signup")));
+document.querySelectorAll(".switchLogin").forEach(b => b.addEventListener("click", () => switchForm("login")));
+
+document.querySelectorAll(".toggle-password").forEach(button => {
+  button.addEventListener("click", () => {
+    const input = document.getElementById(button.dataset.target);
+    const show = input.type === "password";
+    input.type = show ? "text" : "password";
+    button.textContent = show ? "Hide" : "Show";
+    button.setAttribute("aria-label", show ? "Hide password" : "Show password");
+  });
+});
+
+document.getElementById("dob").max = new Date().toISOString().split("T")[0];
+
+// ---------- College email check ----------
+const ALLOWED_COLLEGE_DOMAINS = [
+  // "yourcollege.ac.in"
+];
+
+function isValidCollegeEmail(email) {
+  const e = email.trim().toLowerCase();
+  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(e)) return false;
+  if (ALLOWED_COLLEGE_DOMAINS.length === 0) return true;
+  const domain = e.split("@").pop();
+  return ALLOWED_COLLEGE_DOMAINS.some(d => domain === d.toLowerCase());
+}
+
+// ---------- FACE REGISTRATION ----------
+let faceDesc = null;
+const faceBtn = document.getElementById("faceBtn");
+const faceStatus = document.getElementById("faceStatus");
+const faceVideo = document.getElementById("faceVideo");
+const camBox = document.getElementById("camBox");
+faceBtn.addEventListener("click", async () => {
+  clearNotice();
+  if (!document.getElementById("faceConsent").checked) return showNotice("Please tick the face data consent box first.");
+  faceBtn.disabled = true; faceDesc = null; faceStatus.textContent = "Loading face recognition…";
+  let stream = null, F = null;
+  try {
+    F = await import("./face.js");   // loaded only now, so the login page works even if face.js is missing
+    await F.loadFace();
+    stream = await F.openCamera(faceVideo); camBox.hidden = false;
+    faceDesc = await F.scanFace(faceVideo, m => { faceStatus.textContent = m; });
+    faceStatus.textContent = "Face registered ✓";
+    faceBtn.textContent = "Register again";
+  } catch (err) {
+    console.error(err);
+    faceStatus.textContent = F ? (F.faceError(err) || "Face registration cancelled.") : "Couldn't load face.js. Save it in the same folder as this page and open the site with Live Server or your https address.";
+  } finally { if (F) F.closeCamera(stream); camBox.hidden = true; faceBtn.disabled = false; }
+});
+
+// ---------- SIGNUP ----------
+signupView.addEventListener("submit", async event => {
+  event.preventDefault();
+  clearNotice();
+  if (!signupView.reportValidity()) return;
+
+  const fullName = document.getElementById("fullName").value.trim();
+  const email = document.getElementById("collegeEmail").value.trim().toLowerCase();
+  const course = document.getElementById("course").value;
+  const dob = document.getElementById("dob").value;
+  const uid = normalizeUid(document.getElementById("signupUid").value);
+  const password = document.getElementById("signupPassword").value;
+  const confirmPassword = document.getElementById("confirmPassword").value;
+
+  if (!isValidCollegeEmail(email)) return showNotice("Enter a valid email address from your college's approved domain.");
+  if (!isValidUid(uid)) return showNotice("UID can only contain letters, numbers, hyphens and underscores (3–50 characters).");
+  if (new Date(dob) > new Date()) return showNotice("Date of birth cannot be in the future.");
+  if (password.length < 8) return showNotice("Your password must contain at least 8 characters.");
+  if (password !== confirmPassword) return showNotice("Your passwords do not match.");
+  if (!document.getElementById("faceConsent").checked) return showNotice("Please agree to the face data consent.");
+  if (!faceDesc) return showNotice("Please register your face before creating your account.");
+
+  setLoading(signupView, true, "Creating account...");
+
+  try {
+    const uidRef = doc(db, "uids", uid);
+
+    // Friendly early check (the transaction below is the real guarantee)
+    if ((await getDoc(uidRef)).exists()) throw new Error("UID_TAKEN");
+
+    // Firebase Auth rejects duplicate emails here
+    const cred = await createUserWithEmailAndPassword(auth, email, password);
+    await updateProfile(cred.user, { displayName: fullName });
+
+    try {
+      // Atomically claim the UID and save the profile
+      await runTransaction(db, async tx => {
+        const snap = await tx.get(uidRef);
+        if (snap.exists()) throw new Error("UID_TAKEN");
+
+        tx.set(uidRef, {
+          authUid: cred.user.uid,
+          email,
+          createdAt: serverTimestamp()
+        });
+               tx.set(doc(db, "users", uid), {
+          authUid: cred.user.uid,
+          uid,
+          fullName,
+          email,
+          course,
+          dob,
+          createdAt: serverTimestamp()
+        });
+        tx.set(doc(db, "faces", cred.user.uid), { descriptor: faceDesc, consent: true, createdAt: serverTimestamp() });
+      });
+    } catch (err) {
+      // Roll back the Auth account if the UID could not be claimed
+      await deleteUser(cred.user).catch(() => {});
+      throw err;
+    }
+
+       saveToSheet({ uid, fullName, email, course, dob });
+
+    await signOut(auth);
+
+    signupView.reset();
+    faceDesc = null; faceStatus.textContent = "Not registered yet"; faceBtn.textContent = "Register my face";
+    switchForm("login");
+    showNotice("Account created successfully! You can now log in with your UID and password.", "success");
+  } catch (err) {
+    showNotice(authErrorMessage(err));
+  } finally {
+    setLoading(signupView, false);
+  }
+});
+
+// ---------- LOGIN (UID + password) ----------
+async function getEmailForUid(rawUid) {
+  const snap = await getDoc(doc(db, "uids", normalizeUid(rawUid)));
+  return snap.exists() ? snap.data().email : null;
+}
+const ADMIN_DOMAIN = "hardikadmin@admin.campusconnect.example"; // must match admin.html
+loginView.addEventListener("submit", async event => {
+  event.preventDefault();
+  clearNotice();
+  if (!loginView.reportValidity()) return;
+
+  const uid = document.getElementById("loginUid").value;
+  const password = document.getElementById("loginPassword").value;
+  const remember = document.getElementById("rememberMe").checked;
+
+  setLoading(loginView, true, "Logging in...");
+
+   try {
+    await setPersistence(auth, remember ? browserLocalPersistence : browserSessionPersistence);
+
+    // Student UID -> student email. Otherwise try it as an admin ID.
+    const studentEmail = await getEmailForUid(uid);
+    const id = normalizeUid(uid);
+    if (!studentEmail && !/^[a-z0-9._-]{3,30}$/.test(id)) throw { code: "auth/invalid-credential" };
+    const email = studentEmail || (id + "@" + ADMIN_DOMAIN);
+
+    const cred = await signInWithEmailAndPassword(auth, email, password);
+
+    // Admin: go to the admin page
+    const adminSnap = await getDoc(doc(db, "admins", cred.user.uid));
+    if (adminSnap.exists()) {
+      showNotice("Welcome, admin! Redirecting...", "success");
+      setTimeout(() => { window.location.href = "admin.html"; }, 600);
+      return;
+    }
+
+    // Blocked student: stop here
+    const blockedSnap = await getDoc(doc(db, "blocked", cred.user.uid));
+    if (blockedSnap.exists()) {
+      await signOut(auth);
+      throw { code: "auth/user-disabled" };
+    }
+
+    showNotice("Login successful! Redirecting...", "success");
+    setTimeout(() => { window.location.href = "dashboard.html"; }, 800);
+  } catch (err) {
+    showNotice(authErrorMessage(err));
+  } finally {
+    setLoading(loginView, false);
+  }
+});
+
+// ---------- FORGOT PASSWORD ----------
+document.getElementById("forgotPassword").addEventListener("click", async () => {
+  clearNotice();
+  const uid = document.getElementById("loginUid").value;
+  if (!uid.trim()) return showNotice("Enter your College UID above first, then click Forgot password.");
+
+  try {
+    const email = await getEmailForUid(uid);
+    if (email) await sendPasswordResetEmail(auth, email);
+    // Same message either way, so UIDs can't be probed
+    showNotice("If that UID is registered, a password reset link has been sent to its email.", "success");
+  } catch (err) {
+    showNotice(authErrorMessage(err));
+  }
+});
+
+
+document.querySelectorAll("input, select").forEach(i => {
+  i.addEventListener("input", clearNotice);
+  i.addEventListener("change", clearNotice);
+});
+</script>
+
+<body>
+
+    <main class="page">
+
+        <!-- Left branding section -->
+
+        <section class="brand-panel">
+
+            <div class="brand">
+                <div class="brand-icon">✦</div>
+                <div>Campus<span>Connect</span></div>
+            </div>
+
+            <div class="hero-content">
+
+                <div class="badge">
+                    <span class="status-dot"></span>
+                    Your campus, connected
+                </div>
+
+                <h1>
+                    College life,<br>
+                    <span class="gradient-text">all in one place.</span>
+                </h1>
+
+                <p>
+                    Your campus community starts here.
+                    Discover student deals, rent essentials,
+                    find lost belongings, and never miss a campus event.
+                </p>
+
+                <div class="feature-list">
+
+                    <div class="feature">
+                        <div class="feature-icon">🛍️</div>
+                        <span>Buy, sell & exchange student essentials</span>
+                    </div>
+
+                    <div class="feature">
+                        <div class="feature-icon">🔑</div>
+                        <span>Rent what you need, when you need it</span>
+                    </div>
+
+                    <div class="feature">
+                        <div class="feature-icon">🎉</div>
+                        <span>Stay connected with campus events</span>
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="brand-footer">
+                MADE FOR STUDENTS, POWERED BY COMMUNITY.<br>
+                © <span id="year"></span> CampusConnect. All rights reserved.
+            </div>
+
+        </section>
+
+
+        <!-- Right authentication section -->
+
+        <section class="form-panel">
+
+            <div class="mobile-brand">
+                <div class="brand-icon">✦</div>
+                <div>Campus<span style="color:#b69aff">Connect</span></div>
+            </div>
+
+            <div class="form-heading">
+                <h2 id="headingTitle">Welcome back 👋</h2>
+                <p id="headingSubtitle">
+                    Log in to your campus community.
+                </p>
+            </div>
+
+            <div class="tabs" role="tablist" aria-label="Account access">
+
+                <button
+                    type="button"
+                    class="tab active"
+                    id="loginTab"
+                    role="tab"
+                    aria-selected="true"
+                    aria-controls="loginView">
+                    Login
+                </button>
+
+                <button
+                    type="button"
+                    class="tab"
+                    id="signupTab"
+                    role="tab"
+                    aria-selected="false"
+                    aria-controls="signupView">
+                    Create Account
+                </button>
+
+            </div>
+
+
+            <div
+                id="notice"
+                class="notice"
+                role="status"
+                aria-live="polite">
+            </div>
+
+
+            <!-- LOGIN FORM -->
+
+            <form id="loginView" class="form-view" novalidate>
+
+                <div class="field">
+                    <label for="loginUid">College UID</label>
+
+                    <div class="input-wrap">
+                        <input
+                            type="text"
+                            id="loginUid"
+                            name="uid"
+                            placeholder="Enter your college UID"
+                            autocomplete="username"
+                            required>
+                    </div>
+                </div>
+
+
+                <div class="field">
+                    <label for="loginPassword">Password</label>
+
+                    <div class="input-wrap">
+                        <input
+                            type="password"
+                            id="loginPassword"
+                            name="password"
+                            class="password-input"
+                            placeholder="Enter your password"
+                            autocomplete="current-password"
+                            required>
+
+                        <button
+                            type="button"
+                            class="toggle-password"
+                            data-target="loginPassword"
+                            aria-label="Show password">
+                            Show
+                        </button>
+                    </div>
+                </div>
+
+
+                <div class="form-options">
+
+                    <label class="remember">
+                        <input
+                            type="checkbox"
+                            id="rememberMe"
+                            name="remember">
+                        Remember me
+                    </label>
+
+                    <button
+                        type="button"
+                        class="text-button"
+                        id="forgotPassword">
+                        Forgot password?
+                    </button>
+
+                </div>
+
+
+                <button type="submit" class="submit-btn">
+                    Login to CampusConnect →
+                </button>
+
+
+                <div class="divider">YOUR CAMPUS COMMUNITY AWAITS</div>
+
+
+                <div class="bottom-text">
+                    New to CampusConnect?
+                    <button type="button" class="switchSignup">
+                        Create an account
+                    </button>
+                </div>
+
+            </form>
+
+
+            <!-- SIGNUP FORM -->
+
+            <form id="signupView" class="form-view" hidden novalidate>
+
+                <div class="field">
+                    <label for="fullName">Full Name</label>
+
+                    <div class="input-wrap">
+                        <input
+                            type="text"
+                            id="fullName"
+                            name="fullName"
+                            placeholder="Enter your full name"
+                            autocomplete="name"
+                            maxlength="100"
+                            required>
+                    </div>
+                </div>
+
+
+                <div class="field">
+                    <label for="collegeEmail">College Email Address</label>
+
+                    <div class="input-wrap">
+                        <input
+                            type="email"
+                            id="collegeEmail"
+                            name="collegeEmail"
+                            placeholder="you@yourcollege.edu"
+                            autocomplete="email"
+                            maxlength="254"
+                            required>
+                    </div>
+                </div>
+
+
+                <div class="two-column">
+
+                    <div class="field">
+                        <label for="course">Course / Department</label>
+
+                        <div class="input-wrap">
+                            <select id="course" name="course" required>
+                                <option value="">Select course</option>
+                                <option value="B.Tech">B.Tech</option>
+                                <option value="BCA">BCA</option>
+                                <option value="BBA">BBA</option>
+                                <option value="B.Sc">B.Sc</option>
+                                <option value="B.Com">B.Com</option>
+                                <option value="BA">BA</option>
+                                <option value="M.Tech">M.Tech</option>
+                                <option value="MCA">MCA</option>
+                                <option value="MBA">MBA</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+
+                    <div class="field">
+                        <label for="dob">Date of Birth</label>
+
+                        <div class="input-wrap">
+                            <input
+                                type="date"
+                                id="dob"
+                                name="dob"
+                                autocomplete="bday"
+                                required>
+                        </div>
+                    </div>
+
+                </div>
+
+
+                <div class="field">
+                    <label for="signupUid">College UID</label>
+
+                    <div class="input-wrap">
+                        <input
+                            type="text"
+                            id="signupUid"
+                            name="uid"
+                            placeholder="Enter your unique college ID"
+                            autocomplete="username"
+                            maxlength="50"
+                            required>
+                    </div>
+                </div>
+
+
+                <div class="field">
+                    <label for="signupPassword">Create Password</label>
+
+                    <div class="input-wrap">
+                        <input
+                            type="password"
+                            id="signupPassword"
+                            name="password"
+                            class="password-input"
+                            placeholder="At least 8 characters"
+                            autocomplete="new-password"
+                            minlength="8"
+                            maxlength="128"
+                            required>
+
+                        <button
+                            type="button"
+                            class="toggle-password"
+                            data-target="signupPassword"
+                            aria-label="Show password">
+                            Show
+                        </button>
+                    </div>
+                </div>
+
+
+                <div class="field">
+                    <label for="confirmPassword">Confirm Password</label>
+
+                    <div class="input-wrap">
+                        <input
+                            type="password"
+                            id="confirmPassword"
+                            name="confirmPassword"
+                            class="password-input"
+                            placeholder="Re-enter your password"
+                            autocomplete="new-password"
+                            minlength="8"
+                            maxlength="128"
+                            required>
+
+                        <button
+                            type="button"
+                            class="toggle-password"
+                            data-target="confirmPassword"
+                            aria-label="Show password">
+                            Show
+                        </button>
+                    </div>
+                </div>
+
+
+                <div class="face-box">
+                    <div class="face-title">Face registration (needed for library check-in)</div>
+                    <label class="remember">
+                        <input type="checkbox" id="faceConsent">
+                        I agree to my face data (a number code, not my photo) being saved only to verify my library check-ins.
+                    </label>
+                    <div class="cam" id="camBox" hidden><video id="faceVideo" playsinline muted></video></div>
+                    <div class="face-status" id="faceStatus">Not registered yet</div>
+                    <button type="button" class="face-btn" id="faceBtn">Register my face</button>
+                </div>
+
+                <button type="submit" class="submit-btn">
+                    Create My Account ✨
+                </button>
+
+
+                <div class="divider">JOIN YOUR CAMPUS COMMUNITY</div>
+
+
+                <div class="bottom-text">
+                    Already have an account?
+                    <button type="button" class="switchLogin">
+                        Login instead
+                    </button>
+                </div>
+
+            </form>
+
+
+            <div class="security-note">
+                🔒 Your campus community deserves privacy.<br>
+                Never share your password with anyone.
+            </div>
+
+        </section>
+
+    </main>
+
+
+ 
+
+</body>
+</html>

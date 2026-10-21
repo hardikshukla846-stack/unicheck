@@ -1,0 +1,296 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusConnect | Events</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceeff;--surface:#f4f5ff;--text:#2e2a4f;--muted:#7d79a0;--purple:#8b6cff;
+--clay:10px 10px 22px rgba(130,118,200,.32),-10px -10px 22px rgba(255,255,255,.95),inset -6px -6px 12px rgba(130,118,200,.16),inset 6px 6px 12px rgba(255,255,255,.9);
+--hover:14px 18px 30px rgba(130,118,200,.38),-10px -10px 24px #fff,inset -6px -6px 12px rgba(130,118,200,.16),inset 6px 6px 12px rgba(255,255,255,.95);
+--press:inset 8px 8px 16px rgba(130,118,200,.28),inset -8px -8px 16px rgba(255,255,255,.95);
+--field:inset 5px 5px 11px rgba(130,118,200,.24),inset -5px -5px 11px rgba(255,255,255,.95)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+[hidden]{display:none!important}
+#guard{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--bg);transition:opacity .4s}
+#guard::after{content:"";width:40px;height:40px;border-radius:50%;border:5px solid rgba(139,108,255,.18);border-top-color:var(--purple);animation:spin .8s linear infinite}
+body.ready #guard{opacity:0;pointer-events:none}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 16px 0;padding:12px 20px;border-radius:28px;background:var(--surface);box-shadow:var(--clay)}
+.brand{font-size:18px;font-weight:900;color:inherit;text-decoration:none}.brand span{color:var(--purple)}
+.nav .r{display:flex;gap:10px;align-items:center}
+.nav a.link,.nav button{border:none;background:var(--surface);font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:16px;cursor:pointer;text-decoration:none;color:var(--text);box-shadow:var(--clay)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:44px 0 24px}
+.head h1{font-size:clamp(32px,5vw,48px);font-weight:900;letter-spacing:-1.5px;line-height:1.1}
+.grad{background:linear-gradient(90deg,#7c5cff,#ff6fa5,#4aa3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.head p{color:var(--muted);font-weight:600;margin-top:8px}
+.btn{display:inline-block;border:none;border-radius:22px;color:#fff;font-size:14px;font-weight:800;padding:15px 26px;cursor:pointer;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:8px 10px 20px rgba(123,92,245,.4),inset -5px -6px 10px rgba(60,30,140,.35),inset 5px 5px 10px rgba(255,255,255,.4)}
+.btn:disabled{opacity:.7;cursor:wait}
+.btn.soft{background:var(--surface);color:var(--text);box-shadow:var(--clay)}
+.btn.danger{background:linear-gradient(145deg,#ff9db7,#ee5c86)}
+.tools{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:28px}
+.tabs{display:flex;gap:6px;padding:6px;border-radius:22px;background:#e8eaff;box-shadow:var(--press)}
+.tab{border:none;background:transparent;color:var(--muted);padding:11px 20px;border-radius:16px;font-size:13px;font-weight:800;cursor:pointer}
+.tab.on{color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:5px 6px 12px rgba(123,92,245,.4),inset 3px 3px 6px rgba(255,255,255,.4)}
+.in{width:100%;height:50px;padding:0 18px;border:none;border-radius:20px;background:#eceeff;box-shadow:var(--field);color:var(--text);outline:none;font:inherit;font-size:14px;font-weight:700}
+.in:focus{box-shadow:var(--field),0 0 0 3px rgba(139,108,255,.4)}
+textarea.in{height:auto;padding:14px 18px;min-height:100px;resize:vertical;line-height:1.5}
+select.in{cursor:pointer;width:auto;min-width:170px}
+.list{display:grid;grid-template-columns:repeat(auto-fill,minmax(300px,1fr));gap:24px;margin-bottom:60px}
+.ev{text-align:left;border:none;cursor:pointer;padding:20px;border-radius:30px;background:var(--surface);box-shadow:var(--clay);display:flex;gap:16px;transition:transform .3s,box-shadow .3s}
+.ev:hover{transform:translateY(-6px);box-shadow:var(--hover)}
+.ev.past{opacity:.7}
+.date{flex-shrink:0;width:62px;height:70px;border-radius:20px;display:grid;place-items:center;text-align:center;font-size:11px;font-weight:900;line-height:1.2;color:#fff;box-shadow:5px 6px 12px rgba(130,118,200,.3),inset -3px -3px 7px rgba(0,0,0,.12),inset 3px 3px 7px rgba(255,255,255,.6)}
+.date b{display:block;font-size:24px}
+.ev h3{font-size:16px;font-weight:900;margin-bottom:6px;line-height:1.3}
+.ev .m{font-size:12.5px;font-weight:700;color:var(--muted);line-height:1.6}
+.ev .tag{display:inline-block;margin-top:8px;padding:5px 11px;border-radius:12px;font-size:11px;font-weight:900;color:var(--purple);background:#eceeff;box-shadow:var(--field)}
+.empty{grid-column:1/-1;text-align:center;padding:50px 20px;border-radius:32px;background:var(--surface);box-shadow:var(--press);color:var(--muted);font-weight:700}
+dialog{border:none;border-radius:36px;background:var(--surface);color:var(--text);box-shadow:var(--clay);padding:0;width:min(620px,94vw);max-height:92vh;overflow:auto;margin:auto}
+dialog::backdrop{background:rgba(120,108,190,.4);backdrop-filter:blur(4px)}
+.dlg{padding:30px;position:relative}
+.dlg h2{font-size:26px;font-weight:900;letter-spacing:-.6px;margin-bottom:16px;padding-right:44px}
+.x{position:absolute;top:18px;right:18px;width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;font-weight:900;background:var(--surface);box-shadow:var(--clay)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f{margin-bottom:16px}.f label,.f .lbl{display:block;font-size:13px;font-weight:800;margin-bottom:8px}
+.drop{display:grid;place-items:center;padding:18px;border-radius:24px;background:#eceeff;box-shadow:var(--field);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer}
+.thumb{position:relative;width:110px;height:80px;margin-top:12px;border-radius:18px;overflow:hidden;box-shadow:var(--clay)}
+.thumb img{width:100%;height:100%;object-fit:cover}
+.thumb button{position:absolute;top:4px;right:4px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(46,42,79,.75);color:#fff;cursor:pointer}
+.err{display:none;margin-bottom:14px;padding:12px 16px;border-radius:18px;background:#ffe4ed;color:#c93a69;font-size:13px;font-weight:700}
+.err.show{display:block}
+.poster{width:100%;max-height:300px;object-fit:contain;border-radius:24px;background:#eceeff;margin-bottom:16px}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.tags span{padding:7px 14px;border-radius:14px;font-size:12px;font-weight:800;color:var(--purple);background:#eceeff;box-shadow:var(--field)}
+.desc{line-height:1.7;font-weight:600;color:#4a466b;margin-bottom:18px;white-space:pre-wrap;word-break:break-word}
+.acts{display:flex;gap:12px;flex-wrap:wrap}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,30px);opacity:0;z-index:200;padding:14px 24px;border-radius:22px;font-weight:800;background:var(--surface);box-shadow:var(--clay);transition:all .35s;pointer-events:none;max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:560px){.nav{margin:10px;padding:10px 14px}.wrap{padding:0 14px}.row{grid-template-columns:1fr}.dlg{padding:22px 18px}}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="guard" aria-label="Checking login"></div>
+
+<header class="nav">
+  <a class="brand" href="dashboard.html">Campus<span>Connect</span></a>
+  <div class="r"><a class="link" href="dashboard.html">Home</a><button id="logout" type="button">Log out</button></div>
+</header>
+
+<main class="wrap">
+  <section class="head">
+    <div>
+      <h1>Campus <span class="grad">Events</span></h1>
+      <p>Fests, workshops and club meetups, all in one place.</p>
+    </div>
+    <button class="btn" id="postBtn" type="button" hidden>+ Post an event</button>
+  </section>
+  <section class="tools">
+    <div class="tabs" id="tabs">
+      <button class="tab on" data-v="upcoming" type="button">Upcoming</button>
+      <button class="tab" data-v="past" type="button">Past</button>
+    </div>
+    <select class="in" id="catFilter" aria-label="Category"></select>
+  </section>
+  <section class="list" id="list" aria-live="polite"></section>
+</main>
+
+<dialog id="postDlg">
+  <div class="dlg">
+    <button class="x" type="button" data-close aria-label="Close">✕</button>
+    <h2>Post an event</h2>
+    <form id="postForm" novalidate>
+      <div class="f"><label for="eTitle">Event name</label><input class="in" id="eTitle" maxlength="100" required></div>
+      <div class="row">
+        <div class="f"><label for="eCat">Category</label><select class="in" id="eCat" style="width:100%"></select></div>
+        <div class="f"><label for="eVenue">Venue</label><input class="in" id="eVenue" maxlength="100" placeholder="e.g. Main auditorium" required></div>
+      </div>
+      <div class="row">
+        <div class="f"><label for="eDate">Date</label><input class="in" id="eDate" type="date" required></div>
+        <div class="f"><label for="eTime">Time</label><input class="in" id="eTime" type="time" required></div>
+      </div>
+      <div class="f"><label for="eDesc">Details</label><textarea class="in" id="eDesc" maxlength="1000" placeholder="What is it, who can join, anything to bring?"></textarea></div>
+      <div class="f">
+        <span class="lbl">Poster (optional)</span>
+        <label class="drop" for="eFile">🖼️ Click to add a poster</label>
+        <input id="eFile" type="file" accept="image/*" hidden>
+        <div id="thumb"></div>
+      </div>
+      <div class="err" id="err" role="alert"></div>
+      <div class="acts"><button class="btn" id="submitBtn" type="submit">Publish event</button><button class="btn soft" type="button" data-close>Cancel</button></div>
+    </form>
+  </div>
+</dialog>
+
+<dialog id="viewDlg"><div class="dlg" id="viewBody"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, deleteDoc, getDoc, doc, query, orderBy, limit, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const LOGIN_PAGE = "index.html";
+const app = initializeApp({
+  apiKey: "AIzaSyCKfSjhTBaoK9Kjm_NFx7I0Yf8WT7vyWPo",
+  authDomain: "universityconnect-culko.firebaseapp.com",
+  projectId: "universityconnect-culko",
+  storageBucket: "universityconnect-culko.firebasestorage.app",
+  messagingSenderId: "1045958757342",
+  appId: "1:1045958757342:web:a22f5aecc6b97e982a6b4f",
+  measurementId: "G-3KFVCBL1M2"
+});
+const auth = getAuth(app), db = getFirestore(app);
+const CATS = { "Fest": "#ff8fbd", "Workshop": "#6fb4ff", "Club": "#4fd3ad", "Sports": "#ffc85e", "Academic": "#a58bff", "Other": "#9a96bd" };
+const $ = id => document.getElementById(id);
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+const pad = n => String(n).padStart(2, "0");
+const isImg = s => typeof s === "string" && s.startsWith("data:image/jpeg;base64,");
+const todayStr = () => { const d = new Date(); return d.getFullYear() + "-" + pad(d.getMonth() + 1) + "-" + pad(d.getDate()); };
+const parse = e => { const [y, m, d] = e.date.split("-").map(Number); return new Date(y, m - 1, d); };
+const t12 = t => { const [h, m] = (t || "00:00").split(":").map(Number); return (h % 12 || 12) + ":" + pad(m) + " " + (h < 12 ? "AM" : "PM"); };
+let tt; const toast = m => { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2800); };
+
+let me = null, isAdmin = false, events = [], view = "upcoming", cat = "all", started = false;
+
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.replace(LOGIN_PAGE); return; }
+  me = user;
+  try { isAdmin = (await getDoc(doc(db, "admins", user.uid))).exists(); } catch {}
+  $("postBtn").hidden = !isAdmin;
+  document.body.classList.add("ready");
+  if (!started) {
+    started = true;
+    onSnapshot(query(collection(db, "events"), orderBy("date", "asc"), limit(200)),
+      snap => { events = snap.docs.map(d => ({ id: d.id, ...d.data() })); render(); },
+      err => { console.error(err); toast("Couldn't load events. Check your Firestore rules."); render(); });
+  }
+});
+window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+$("logout").addEventListener("click", async () => { await signOut(auth); location.replace(LOGIN_PAGE); });
+
+// ---------- Filters ----------
+const cf = $("catFilter"), ce = $("eCat");
+cf.appendChild(new Option("All categories", "all"));
+Object.keys(CATS).forEach(c => { cf.appendChild(new Option(c, c)); ce.appendChild(new Option(c, c)); });
+cf.addEventListener("change", () => { cat = cf.value; render(); });
+$("tabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return; view = b.dataset.v;
+  document.querySelectorAll("#tabs .tab").forEach(t => t.classList.toggle("on", t === b)); render();
+});
+
+// ---------- List ----------
+function render() {
+  const list = $("list"); list.replaceChildren();
+  const t = todayStr();
+  const rows = events.filter(e => e.date && (view === "upcoming" ? e.date >= t : e.date < t) && (cat === "all" || e.category === cat))
+    .sort((a, b) => (a.date + (a.time || "")).localeCompare(b.date + (b.time || "")));
+  if (view === "past") rows.reverse();
+  if (!rows.length) {
+    list.appendChild(el("div", "empty", view === "upcoming" ? "No upcoming events right now. Check back soon!" : "No past events yet."));
+    return;
+  }
+  rows.forEach(ev => {
+    const d = parse(ev), card = el("button", "ev" + (view === "past" ? " past" : "")); card.type = "button";
+    const badge = el("div", "date"), inner = el("div"), day = el("b", "", d.getDate());
+    inner.append(day, d.toLocaleDateString("en-IN", { month: "short" }).toUpperCase());
+    badge.appendChild(inner); badge.style.background = CATS[ev.category] || CATS.Other;
+    const body = el("div");
+    body.append(el("h3", "", ev.title), el("div", "m", "🕒 " + t12(ev.time)), el("div", "m", "📍 " + (ev.venue || "Campus")), el("span", "tag", ev.category || "Other"));
+    card.append(badge, body); card.addEventListener("click", () => openDetail(ev)); list.appendChild(card);
+  });
+}
+
+// ---------- Detail ----------
+const viewDlg = $("viewDlg");
+function openDetail(ev) {
+  const body = $("viewBody"); body.replaceChildren();
+  const x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Close"); x.addEventListener("click", () => viewDlg.close());
+  body.appendChild(x);
+  if (isImg(ev.poster)) { const im = document.createElement("img"); im.src = ev.poster; im.alt = ev.title + " poster"; im.className = "poster"; body.appendChild(im); }
+  body.appendChild(el("h2", "", ev.title));
+  const tags = el("div", "tags");
+  [ev.category || "Other", "📅 " + parse(ev).toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" }),
+   "🕒 " + t12(ev.time), "📍 " + (ev.venue || "Campus")].forEach(s => tags.appendChild(el("span", "", s)));
+  body.appendChild(tags);
+  if (ev.description) body.appendChild(el("p", "desc", ev.description));
+  const acts = el("div", "acts");
+  if (isAdmin) {
+    const d = el("button", "btn danger", "Delete event"); d.type = "button";
+    d.addEventListener("click", async () => {
+      if (!confirm("Delete this event? This can't be undone.")) return;
+      try { await deleteDoc(doc(db, "events", ev.id)); viewDlg.close(); toast("Event deleted."); }
+      catch (e) { console.error(e); toast("Couldn't delete it. Please try again."); }
+    }); acts.appendChild(d);
+  }
+  const c = el("button", "btn soft", "Close"); c.type = "button"; c.addEventListener("click", () => viewDlg.close());
+  acts.appendChild(c); body.appendChild(acts); viewDlg.showModal();
+}
+
+// ---------- Post (admin only) ----------
+const postDlg = $("postDlg"), form = $("postForm");
+let poster = "";
+const showErr = m => { const e = $("err"); e.textContent = m || ""; e.classList.toggle("show", !!m); };
+function thumb() {
+  const box = $("thumb"); box.replaceChildren(); if (!poster) return;
+  const t = el("div", "thumb"), im = document.createElement("img"); im.src = poster; im.alt = "Selected poster";
+  const rm = el("button", "", "✕"); rm.type = "button"; rm.setAttribute("aria-label", "Remove poster");
+  rm.addEventListener("click", () => { poster = ""; thumb(); });
+  t.append(im, rm); box.appendChild(t);
+}
+function compress(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const s = Math.min(1, 900 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.width * s)); c.height = Math.max(1, Math.round(img.height * s));
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      let q = 0.75, out = c.toDataURL("image/jpeg", q);
+      while (out.length > 350000 && q > 0.3) { q -= 0.15; out = c.toDataURL("image/jpeg", q); }
+      res(out);
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+$("eFile").addEventListener("change", async e => {
+  showErr(""); const f = e.target.files[0]; e.target.value = ""; if (!f || !f.type.startsWith("image/")) return;
+  try { const out = await compress(f); if (out.length > 380000) return showErr("That poster is too large. Try a smaller image."); poster = out; thumb(); }
+  catch { showErr("That file couldn't be read as an image."); }
+});
+$("postBtn").addEventListener("click", () => {
+  form.reset(); poster = ""; thumb(); showErr(""); $("eDate").min = todayStr(); postDlg.showModal(); $("eTitle").focus();
+});
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => postDlg.close()));
+[postDlg, viewDlg].forEach(d => d.addEventListener("click", e => { if (e.target === d) d.close(); }));
+
+form.addEventListener("submit", async e => {
+  e.preventDefault(); showErr("");
+  if (!isAdmin) return showErr("Only admins can post events.");
+  const title = $("eTitle").value.trim(), venue = $("eVenue").value.trim(), date = $("eDate").value, time = $("eTime").value;
+  if (title.length < 3) return showErr("Add an event name of at least 3 characters.");
+  if (!venue) return showErr("Add the venue.");
+  if (!date || !time) return showErr("Choose the date and time.");
+  const btn = $("submitBtn"); btn.disabled = true; btn.textContent = "Publishing…";
+  try {
+    await addDoc(collection(db, "events"), {
+      title, category: $("eCat").value, venue, date, time, description: $("eDesc").value.trim(),
+      poster, createdBy: me.uid, createdAt: serverTimestamp()
+    });
+    postDlg.close(); toast("Event published.");
+  } catch (err) { console.error(err); showErr("Couldn't publish. Check your connection and Firestore rules, then try again."); }
+  finally { btn.disabled = false; btn.textContent = "Publish event"; }
+});
+</script>
+</body>
+</html>

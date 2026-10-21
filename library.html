@@ -1,0 +1,460 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusConnect | Library Check-in</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceeff;--surface:#f4f5ff;--text:#2e2a4f;--muted:#7d79a0;--purple:#8b6cff;
+--clay:10px 10px 22px rgba(130,118,200,.32),-10px -10px 22px rgba(255,255,255,.95),inset -6px -6px 12px rgba(130,118,200,.16),inset 6px 6px 12px rgba(255,255,255,.9);
+--field:inset 5px 5px 11px rgba(130,118,200,.24),inset -5px -5px 11px rgba(255,255,255,.95)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);display:flex;flex-direction:column}
+button{font:inherit}
+:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+[hidden]{display:none!important}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;margin:12px 16px 0;padding:12px 20px;border-radius:28px;background:var(--surface);box-shadow:var(--clay)}
+.brand{font-size:18px;font-weight:900;color:inherit;text-decoration:none}.brand span{color:var(--purple)}
+.nav a.link,.nav button{border:none;background:var(--surface);color:var(--text);font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:16px;cursor:pointer;text-decoration:none;box-shadow:var(--clay)}
+.nav .r{display:flex;gap:10px}
+main{flex:1;display:grid;place-items:center;padding:28px 16px}
+.card{width:min(460px,100%);padding:34px 28px;border-radius:36px;background:var(--surface);box-shadow:var(--clay);text-align:center}
+.icon{width:76px;height:76px;margin:0 auto 16px;display:grid;place-items:center;border-radius:26px;font-size:36px;color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:6px 8px 16px rgba(123,92,245,.4),inset 4px 4px 8px rgba(255,255,255,.4)}
+.icon.ok{background:linear-gradient(145deg,#a2f0d8,#3fcf9f);box-shadow:6px 8px 16px rgba(63,207,159,.4),inset 4px 4px 8px rgba(255,255,255,.5)}
+h1{font-size:26px;font-weight:900;letter-spacing:-.6px}
+.sub{color:var(--muted);font-weight:700;font-size:14px;margin:6px 0 20px;line-height:1.6}
+.clock{font-size:34px;font-weight:900;letter-spacing:-1px;color:var(--purple)}
+.date{font-size:13px;font-weight:700;color:var(--muted);margin-bottom:20px}
+.info{text-align:left;padding:6px 18px;border-radius:24px;background:#eceeff;box-shadow:var(--field);margin-bottom:20px}
+.row{display:flex;justify-content:space-between;gap:14px;padding:12px 0;font-size:14px;font-weight:800}
+.row+.row{border-top:1px solid rgba(130,118,200,.2)}
+.row span{color:var(--muted);font-weight:700}
+.row b{text-align:right;word-break:break-word}
+.btn{width:100%;height:54px;border:none;border-radius:22px;color:#fff;font-size:15px;font-weight:800;cursor:pointer;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:8px 10px 20px rgba(123,92,245,.4),inset -5px -6px 10px rgba(60,30,140,.35),inset 5px 5px 10px rgba(255,255,255,.4)}
+.btn:disabled{opacity:.7;cursor:wait}
+.btn.soft{background:var(--surface);color:var(--text);box-shadow:var(--clay);margin-top:12px}
+.btn.red{background:linear-gradient(145deg,#ff9db7,#ee5c86)}
+.msg{display:none;margin-bottom:16px;padding:12px 16px;border-radius:18px;font-size:13px;font-weight:700;background:#ffe4ed;color:#c93a69}
+.msg.show{display:block}
+.spin{width:40px;height:40px;margin:30px auto;border-radius:50%;border:5px solid rgba(139,108,255,.18);border-top-color:var(--purple);animation:s .8s linear infinite}
+@keyframes s{to{transform:rotate(360deg)}}
+.cam{position:relative;border-radius:28px;overflow:hidden;background:#1d1a33;margin-bottom:16px;aspect-ratio:1/1}
+.cam video{width:100%;height:100%;object-fit:cover}
+.cam::after{content:"";position:absolute;inset:18%;border:4px solid rgba(255,255,255,.9);border-radius:24px;box-shadow:0 0 0 999px rgba(20,16,50,.35)}
+.qrbox{display:inline-block;padding:14px;border-radius:24px;background:#fff;box-shadow:var(--field);margin-bottom:14px}
+.qrbox canvas{display:block;width:min(280px,70vw);height:auto;image-rendering:pixelated}
+.code{font-family:ui-monospace,Consolas,monospace;font-size:14px;font-weight:800;letter-spacing:1px;word-break:break-all;margin-bottom:6px}
+.msg.ok{background:#dcf8ee;color:#1c7f5f}
+#faceVideo,#enrollVideo{transform:scaleX(-1)}
+.consent{display:flex;gap:10px;align-items:flex-start;text-align:left;font-size:12.5px;font-weight:700;color:#4a466b;margin-bottom:16px;line-height:1.5;cursor:pointer}
+.consent input{margin-top:3px;accent-color:#8b6cff}
+@media(prefers-reduced-motion:reduce){.spin{animation-duration:2s}}
+@media print{body{background:#fff}.nav,.no-print{display:none!important}.card{box-shadow:none}main{padding:0}}
+</style>
+</head>
+<body>
+<header class="nav">
+  <a class="brand" href="dashboard.html">Campus<span>Connect</span></a>
+  <div class="r"><a class="link" href="dashboard.html">Home</a><button id="logout" type="button">Log out</button></div>
+</header>
+
+<main>
+  <div class="card" id="loading"><div class="spin" aria-label="Loading"></div></div>
+
+  <!-- Student: details + scan button -->
+  <div class="card" id="checkin" hidden>
+    <div class="icon">📚</div>
+    <h1>Library check-in</h1>
+    <p class="sub">Scan the QR code at the library entrance to check in.</p>
+    <div class="clock" id="clock"></div>
+    <div class="date" id="date"></div>
+    <div class="info">
+      <div class="row"><span>Name</span><b id="fName"></b></div>
+      <div class="row"><span>College UID</span><b id="fUid"></b></div>
+      <div class="row"><span>Course</span><b id="fCourse"></b></div>
+    </div>
+    <div class="msg" id="msg" role="alert"></div>
+    <button class="btn" id="scanBtn" type="button">📷 Scan QR to check in</button>
+  </div>
+
+  <!-- Student: camera -->
+  <div class="card" id="scan" hidden>
+    <h1>Scan the library QR</h1>
+    <p class="sub">Point your camera at the QR code on the library notice.</p>
+    <div class="cam"><video id="video" playsinline muted></video></div>
+    <div class="msg" id="scanMsg" role="alert"></div>
+    <button class="btn soft" id="cancelScan" type="button">Cancel</button>
+  </div>
+
+  <!-- Student: face check -->
+  <div class="card" id="face" hidden>
+    <h1>Face check</h1>
+    <p class="sub" id="faceHint">Loading…</p>
+    <div class="cam"><video id="faceVideo" playsinline muted></video></div>
+    <button class="btn soft" id="cancelFace" type="button">Cancel</button>
+  </div>
+
+  <!-- Student: register face (first time) -->
+  <div class="card" id="enroll" hidden>
+    <div class="icon">🙂</div>
+    <h1>Register your face</h1>
+    <p class="sub">To stop account sharing, library check-in needs a face match. Do this once.</p>
+    <label class="consent"><input type="checkbox" id="enrollConsent"> I agree to my face data (a number code, not my photo) being saved only to verify my library check-ins.</label>
+    <div class="cam" id="enrollCam" hidden><video id="enrollVideo" playsinline muted></video></div>
+    <p class="sub" id="enrollHint"></p>
+    <div class="msg" id="enrollMsg" role="alert"></div>
+    <button class="btn" id="enrollBtn" type="button">Register my face</button>
+    <button class="btn soft" id="enrollBack" type="button">Back</button>
+  </div>
+
+  <!-- Student: checked in -->
+  <div class="card" id="inside" hidden>
+    <div class="icon ok">✓</div>
+    <h1>You're checked in!</h1>
+    <p class="sub">Enjoy your time at the library. Check out when you leave.</p>
+    <div class="clock" id="timer">00:00:00</div>
+    <div class="date">Time in the library</div>
+    <div class="info">
+      <div class="row"><span>Name</span><b id="iName"></b></div>
+      <div class="row"><span>College UID</span><b id="iUid"></b></div>
+      <div class="row"><span>Course</span><b id="iCourse"></b></div>
+      <div class="row"><span>Checked in</span><b id="iTime"></b></div>
+    </div>
+    <div class="msg" id="inMsg" role="alert"></div>
+    <button class="btn" id="outBtn" type="button">Check out</button>
+    <button class="btn soft" id="homeIn" type="button">Back to home</button>
+  </div>
+
+  <!-- Student: checked out -->
+  <div class="card" id="out" hidden>
+    <div class="icon ok" id="oIcon">🎉</div>
+    <h1 id="oTitle">Thanks for visiting!</h1>
+    <p class="sub" id="oText"></p>
+    <div class="clock" id="oDur"></div>
+    <div class="date">Time spent in the library</div>
+    <div class="info">
+      <div class="row"><span>Checked in</span><b id="oIn"></b></div>
+      <div class="row"><span>Checked out</span><b id="oOut"></b></div>
+    </div>
+    <button class="btn soft" id="homeOut" type="button">Back to home</button>
+  </div>
+
+  <!-- Admin: the unique QR -->
+  <div class="card" id="admin" hidden>
+    <h1>Library QR code</h1>
+    <p class="sub">Print this and display it at the library entrance. Only this QR works for check-in.</p>
+    <div class="qrbox" id="qrbox" hidden><canvas id="qr" aria-label="Library check-in QR code"></canvas></div>
+    <div class="code" id="codeText"></div>
+    <p class="sub" id="adminNote" style="margin-top:10px"></p>
+    <div class="msg" id="adminMsg" role="alert"></div>
+    <button class="btn no-print" id="printBtn" type="button" hidden>🖨️ Print QR</button>
+    <button class="btn soft red no-print" id="newCode" type="button">Generate new code</button>
+  </div>
+</main>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, getDocs, getDoc, setDoc, updateDoc, doc, query, where, limit, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const LOGIN_PAGE = "index.html";
+const PREFIX = "CAMPUSCONNECT-LIB:";   // text stored inside the QR code
+const COOLDOWN_MIN = 10;               // blocks accidental double check-ins on this device
+const app = initializeApp({
+  apiKey: "AIzaSyCKfSjhTBaoK9Kjm_NFx7I0Yf8WT7vyWPo",
+  authDomain: "universityconnect-culko.firebaseapp.com",
+  projectId: "universityconnect-culko",
+  storageBucket: "universityconnect-culko.firebasestorage.app",
+  messagingSenderId: "1045958757342",
+  appId: "1:1045958757342:web:a22f5aecc6b97e982a6b4f",
+  measurementId: "G-3KFVCBL1M2"
+});
+const auth = getAuth(app), db = getFirestore(app);
+const $ = id => document.getElementById(id);
+const VIEWS = ["loading", "checkin", "scan", "face", "enroll", "inside", "out", "admin"];
+const show = id => VIEWS.forEach(x => $(x).hidden = x !== id);
+const setMsg = (id, m, ok) => { const e = $(id); e.textContent = m || ""; e.classList.toggle("show", !!m); e.classList.toggle("ok", !!(m && ok)); };
+const when = d => d.toLocaleString("en-IN", { day: "numeric", month: "short", year: "numeric", hour: "numeric", minute: "2-digit", hour12: true });
+const lsGet = k => { try { return localStorage.getItem(k); } catch { return null; } };
+const lsSet = (k, v) => { try { localStorage.setItem(k, v); } catch {} };
+
+let me = null, profile = null, stream = null, raf = 0, busy = false, currentCode = null, faceDesc = null, faceCtl = null;
+
+// Loads a script, trying each address in turn until one works
+function loadScript(urls) {
+  return new Promise((resolve, reject) => {
+    let i = 0;
+    const next = () => {
+      if (i >= urls.length) return reject(new Error("load failed"));
+      const sc = document.createElement("script");
+      sc.src = urls[i++]; sc.onload = resolve;
+      sc.onerror = () => { sc.remove(); next(); };
+      document.head.appendChild(sc);
+    };
+    next();
+  });
+}
+const JSQR_URLS = ["https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js", "https://cdnjs.cloudflare.com/ajax/libs/jsQR/1.4.0/jsQR.min.js", "https://unpkg.com/jsqr@1.4.0/dist/jsQR.js"];
+const QR_URLS = ["https://cdn.jsdelivr.net/npm/qrcode-generator@1.4.4/qrcode.js", "https://cdnjs.cloudflare.com/ajax/libs/qrcode-generator/1.4.4/qrcode.min.js", "https://unpkg.com/qrcode-generator@1.4.4/qrcode.js"];
+// Many phones can read QR codes natively, with no download needed
+let detector = null;
+if ("BarcodeDetector" in window) { try { detector = new BarcodeDetector({ formats: ["qr_code"] }); } catch {} }
+
+setInterval(tick, 1000); tick();
+function tick() {
+  const n = new Date();
+  $("clock").textContent = n.toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", second: "2-digit", hour12: true });
+  $("date").textContent = n.toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "long", year: "numeric" });
+}
+
+// ---------- Who is this? ----------
+onAuthStateChanged(auth, async user => {
+  if (!user) { location.replace(LOGIN_PAGE); return; }
+  me = user;
+  try {
+    if ((await getDoc(doc(db, "admins", user.uid))).exists()) { await loadAdmin(); return; }
+    const snap = await getDocs(query(collection(db, "users"), where("authUid", "==", user.uid), limit(1)));
+    if (snap.empty) {
+      show("checkin"); $("scanBtn").hidden = true;
+      return setMsg("msg", "Only student accounts can check in. Your profile wasn't found.");
+    }
+    profile = snap.docs[0].data();
+    try { const fd = await getDoc(doc(db, "faces", user.uid)); faceDesc = fd.exists() ? fd.data().descriptor : null; } catch { faceDesc = null; }
+    $("fName").textContent = profile.fullName || "-";
+    $("fUid").textContent = profile.uid || snap.docs[0].id;
+    $("fCourse").textContent = profile.course || "-";
+    await resumeVisit();
+  } catch (err) {
+    console.error(err); show("checkin"); $("scanBtn").hidden = true;
+    setMsg("msg", "Couldn't load your profile. Check your connection and try again.");
+  }
+});
+
+// ---------- Student: scan the QR ----------
+function extractCode(text) {
+  if (typeof text !== "string" || !text.startsWith(PREFIX)) return null;
+  const c = text.slice(PREFIX.length).trim();
+  return /^[A-Za-z0-9]{8,64}$/.test(c) ? c : null;
+}
+$("scanBtn").addEventListener("click", async () => {
+  setMsg("msg", ""); setMsg("scanMsg", "");
+  if (!faceDesc) { setMsg("enrollMsg", ""); show("enroll"); return; }
+  const last = Number(lsGet("libLast_" + me.uid) || 0);
+  if (last && (Date.now() - last) / 60000 < COOLDOWN_MIN)
+    return setMsg("msg", "You already checked in at " + new Date(last).toLocaleTimeString("en-IN", { hour: "numeric", minute: "2-digit", hour12: true }) + ".");
+  if (!detector && !window.jsQR) {
+    $("scanBtn").disabled = true;
+    try { await loadScript(JSQR_URLS); }
+    catch { $("scanBtn").disabled = false; return setMsg("msg", "Couldn't load the QR scanner. Your network or an ad blocker may be blocking it. Try another network, or turn the blocker off."); }
+    $("scanBtn").disabled = false;
+  }
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia)
+    return setMsg("msg", "Camera isn't available here. Open the site over https in your phone's browser.");
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: { ideal: "environment" } }, audio: false });
+  } catch { return setMsg("msg", "Couldn't open the camera. Allow camera access and try again."); }
+  const v = $("video"); v.srcObject = stream; await v.play();
+  show("scan"); loop();
+});
+$("cancelScan").addEventListener("click", () => { stopScan(); show("checkin"); });
+function stopScan() {
+  cancelAnimationFrame(raf);
+  if (stream) stream.getTracks().forEach(t => t.stop());
+  stream = null;
+}
+const cv = document.createElement("canvas"), cx = cv.getContext("2d", { willReadFrequently: true });
+async function loop() {
+  if (!stream) return;
+  const v = $("video");
+  if (v.readyState === v.HAVE_ENOUGH_DATA && v.videoWidth) {
+    let text = null;
+    try {
+      if (detector) {
+        const r = await detector.detect(v);
+        if (r.length) text = r[0].rawValue;
+      } else {
+        const w = Math.min(640, v.videoWidth), h = Math.round(v.videoHeight * w / v.videoWidth);
+        cv.width = w; cv.height = h; cx.drawImage(v, 0, 0, w, h);
+        const img = cx.getImageData(0, 0, w, h);
+        const r = jsQR(img.data, w, h, { inversionAttempts: "dontInvert" });
+        if (r && r.data) text = r.data;
+      }
+    } catch {}
+    if (!stream) return;
+    if (text) {
+      const code = extractCode(text);
+      if (code) { stopScan(); verifyThenSubmit(code); return; }
+      setMsg("scanMsg", "That isn't the library's check-in QR code.");
+    }
+  }
+  raf = requestAnimationFrame(loop);
+}
+
+// ---------- Student: face check and first-time face registration ----------
+let faceMod = null;   // face.js is loaded only when needed, so this page opens even if it is missing
+const faceLib = async () => faceMod || (faceMod = await import("./face.js"));
+const faceMsg = err => faceMod ? faceMod.faceError(err) : "Couldn't load face.js. Save it in the same folder as this page and open the site with Live Server or your https address.";
+async function verifyThenSubmit(code) {
+  faceCtl = { cancelled: false }; setMsg("msg", ""); $("faceHint").textContent = "Loading face recognition…"; show("face");
+  let cam = null;
+  try {
+    const F = await faceLib(); await F.loadFace();
+    cam = await F.openCamera($("faceVideo"));
+    const d = await F.scanFace($("faceVideo"), m => { $("faceHint").textContent = m; }, faceCtl);
+    if (F.faceDistance(d, faceDesc) > F.FACE_THRESHOLD) { show("checkin"); return setMsg("msg", "Your face doesn't match this account, so check-in was cancelled."); }
+  } catch (err) { console.error(err); show("checkin"); return setMsg("msg", faceMsg(err)); }
+  finally { if (faceMod) faceMod.closeCamera(cam); }
+  submit(code);
+}
+$("cancelFace").addEventListener("click", () => { if (faceCtl) faceCtl.cancelled = true; });
+$("enrollBack").addEventListener("click", () => { if (faceCtl) faceCtl.cancelled = true; show("checkin"); });
+$("enrollBtn").addEventListener("click", async () => {
+  setMsg("enrollMsg", "");
+  if (!$("enrollConsent").checked) return setMsg("enrollMsg", "Please tick the consent box first.");
+  const b = $("enrollBtn"); b.disabled = true; faceCtl = { cancelled: false }; let cam = null;
+  try {
+    $("enrollHint").textContent = "Loading face recognition…"; const F = await faceLib(); await F.loadFace();
+    cam = await F.openCamera($("enrollVideo")); $("enrollCam").hidden = false;
+    const d = await F.scanFace($("enrollVideo"), m => { $("enrollHint").textContent = m; }, faceCtl);
+    await setDoc(doc(db, "faces", me.uid), { descriptor: d, consent: true, createdAt: serverTimestamp() });
+    faceDesc = d; show("checkin"); setMsg("msg", "Face registered. Now scan the library QR to check in.", true);
+  } catch (err) { console.error(err); setMsg("enrollMsg", faceMsg(err) || (err.code ? "Couldn't save your face. Check your Firestore rules." : "")); }
+  finally { if (faceMod) faceMod.closeCamera(cam); $("enrollCam").hidden = true; $("enrollHint").textContent = ""; b.disabled = false; }
+});
+
+// ---------- Student: save the check-in ----------
+async function submit(code) {
+  if (busy) return; busy = true; show("loading");
+  const entry = { uid: profile.uid, name: profile.fullName, course: profile.course, authUid: me.uid, code };
+  try {
+    const ref = await addDoc(collection(db, "libraryCheckins"), { ...entry, checkedInAt: serverTimestamp(), checkedOutAt: null });
+    lsSet("libLast_" + me.uid, String(Date.now()));
+    let start = new Date();
+    try { const d = (await getDoc(ref)).data(); if (d && d.checkedInAt) start = d.checkedInAt.toDate(); } catch {}
+    openVisit = { id: ref.id, start };
+    showInside();
+  } catch (err) {
+    console.error(err); show("checkin");
+    setMsg("msg", err.code === "permission-denied"
+      ? "Check-in failed. Make sure you scanned the current library QR code. If it keeps failing, ask the library desk."
+      : "Couldn't check in. Check your connection and try again.");
+  } finally { busy = false; }
+}
+
+// ---------- Student: inside the library and check-out ----------
+let openVisit = null, timerId = 0;
+const STALE_HOURS = 12;   // an unclosed visit older than this is ignored
+const pad = n => String(n).padStart(2, "0");
+function fmtDur(ms) {
+  const mins = Math.round(ms / 60000);
+  if (mins < 1) return "less than a minute";
+  const h = Math.floor(mins / 60), m = mins % 60;
+  return h ? h + " h " + m + " min" : m + " min";
+}
+function praise(min) {
+  if (min < 5) return ["👋", "Quick visit!", "Short stops count too. Come back whenever you need a quiet spot."];
+  if (min < 30) return ["📖", "Nice start!", "A short, focused session is still a good one. Keep it up!"];
+  if (min < 60) return ["👏", "Well done!", "Solid study time. Your effort adds up."];
+  if (min < 120) return ["🌟", "Great focus!", "Over an hour of steady work. That's how progress happens."];
+  if (min < 240) return ["🏆", "Excellent dedication!", "A long, productive session. You've earned a break."];
+  return ["🥇", "Library champion!", "Hours of hard work. Remember to rest, stretch and drink some water."];
+}
+async function resumeVisit() {
+  try {
+    const snap = await getDocs(query(collection(db, "libraryCheckins"),
+      where("authUid", "==", me.uid), where("checkedOutAt", "==", null), limit(10)));
+    let best = null;
+    snap.forEach(d => {
+      const t = d.data().checkedInAt; if (!t || !t.toDate) return;
+      const start = t.toDate();
+      if (Date.now() - start.getTime() > STALE_HOURS * 3600000) return;
+      if (!best || start > best.start) best = { id: d.id, start };
+    });
+    openVisit = best;
+  } catch (err) { console.error(err); openVisit = null; }
+  openVisit ? showInside() : show("checkin");
+}
+function showInside() {
+  $("iName").textContent = profile.fullName || "-"; $("iUid").textContent = profile.uid || "-";
+  $("iCourse").textContent = profile.course || "-"; $("iTime").textContent = when(openVisit.start);
+  setMsg("inMsg", ""); show("inside"); tickTimer();
+  clearInterval(timerId); timerId = setInterval(tickTimer, 1000);
+}
+function tickTimer() {
+  if (!openVisit) return;
+  const s = Math.max(0, Math.floor((Date.now() - openVisit.start.getTime()) / 1000));
+  $("timer").textContent = pad(Math.floor(s / 3600)) + ":" + pad(Math.floor(s % 3600 / 60)) + ":" + pad(s % 60);
+}
+$("outBtn").addEventListener("click", async () => {
+  if (!openVisit || busy) return; busy = true; setMsg("inMsg", "");
+  const b = $("outBtn"); b.disabled = true; b.textContent = "Checking out…";
+  const ref = doc(db, "libraryCheckins", openVisit.id);
+  try {
+    await updateDoc(ref, { checkedOutAt: serverTimestamp() });
+    let start = openVisit.start, end = new Date();
+    try {
+      const d = (await getDoc(ref)).data();
+      if (d.checkedInAt) start = d.checkedInAt.toDate();
+      if (d.checkedOutAt) end = d.checkedOutAt.toDate();
+    } catch {}
+    clearInterval(timerId); openVisit = null;
+    try { localStorage.removeItem("libLast_" + me.uid); } catch {}
+    const ms = Math.max(0, end - start), [icon, title, text] = praise(Math.floor(ms / 60000));
+    $("oIcon").textContent = icon; $("oTitle").textContent = title; $("oText").textContent = text;
+    $("oDur").textContent = fmtDur(ms); $("oIn").textContent = when(start); $("oOut").textContent = when(end);
+    show("out");
+  } catch (err) { console.error(err); setMsg("inMsg", "Couldn't check out. Check your connection and try again."); }
+  finally { busy = false; b.disabled = false; b.textContent = "Check out"; }
+});
+
+// ---------- Admin: create / show the unique QR ----------
+function randomCode() {
+  const chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789", a = new Uint32Array(16);
+  crypto.getRandomValues(a);
+  return Array.from(a, n => chars[n % chars.length]).join("");
+}
+async function loadAdmin() {
+  const s = await getDoc(doc(db, "settings", "library"));
+  currentCode = s.exists() && typeof s.data().code === "string" ? s.data().code : null;
+  show("admin"); drawQR();
+}
+async function drawQR() {
+  const has = !!currentCode;
+  $("qrbox").hidden = !has; $("printBtn").hidden = !has;
+  $("codeText").textContent = has ? "Code: " + currentCode : "";
+  $("newCode").textContent = has ? "Generate new code" : "Generate the library QR code";
+  $("adminNote").textContent = has
+    ? "Generating a new code makes every old printed QR stop working."
+    : "No QR code has been created yet.";
+  if (!has) return;
+  if (!window.qrcode) {
+    try { await loadScript(QR_URLS); }
+    catch { return setMsg("adminMsg", "Couldn't load the QR generator. Your network or an ad blocker may be blocking it."); }
+  }
+  const qr = qrcode(0, "M"); qr.addData(PREFIX + currentCode); qr.make();
+  const n = qr.getModuleCount(), cell = 8, m = 4, size = (n + 2 * m) * cell, c = $("qr"), g = c.getContext("2d");
+  c.width = c.height = size; g.fillStyle = "#fff"; g.fillRect(0, 0, size, size); g.fillStyle = "#000";
+  for (let r = 0; r < n; r++) for (let k = 0; k < n; k++) if (qr.isDark(r, k)) g.fillRect((k + m) * cell, (r + m) * cell, cell, cell);
+}
+$("newCode").addEventListener("click", async () => {
+  setMsg("adminMsg", "");
+  if (currentCode && !confirm("Generate a new code? Every old printed QR will stop working.")) return;
+  const b = $("newCode"); b.disabled = true;
+  try {
+    const c = randomCode();
+    await setDoc(doc(db, "settings", "library"), { code: c, updatedAt: serverTimestamp() });
+    currentCode = c; drawQR();
+  } catch (err) { console.error(err); setMsg("adminMsg", "Couldn't save the new code. Check your Firestore rules."); }
+  finally { b.disabled = false; }
+});
+$("printBtn").addEventListener("click", () => window.print());
+
+["homeIn", "homeOut"].forEach(id => $(id).addEventListener("click", () => location.href = "dashboard.html"));
+$("logout").addEventListener("click", async () => { stopScan(); await signOut(auth); location.replace("index.html"); });
+</script>
+</body>
+</html>

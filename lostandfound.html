@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CampusConnect | Lost &amp; Found</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@600;700;800;900&display=swap" rel="stylesheet">
+<style>
+:root{--bg:#eceeff;--surface:#f4f5ff;--text:#2e2a4f;--muted:#7d79a0;--purple:#8b6cff;--lost:#ff7a9c;--found:#3fcf9f;
+--clay:10px 10px 22px rgba(130,118,200,.32),-10px -10px 22px rgba(255,255,255,.95),inset -6px -6px 12px rgba(130,118,200,.16),inset 6px 6px 12px rgba(255,255,255,.9);
+--hover:14px 18px 30px rgba(130,118,200,.38),-10px -10px 24px #fff,inset -6px -6px 12px rgba(130,118,200,.16),inset 6px 6px 12px rgba(255,255,255,.95);
+--press:inset 8px 8px 16px rgba(130,118,200,.28),inset -8px -8px 16px rgba(255,255,255,.95);
+--field:inset 5px 5px 11px rgba(130,118,200,.24),inset -5px -5px 11px rgba(255,255,255,.95);
+--btn:8px 10px 20px rgba(123,92,245,.4),inset -5px -6px 10px rgba(60,30,140,.35),inset 5px 5px 10px rgba(255,255,255,.4)}
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;font-family:'Nunito',sans-serif;background:var(--bg);color:var(--text);overflow-x:hidden}
+button{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--purple);outline-offset:2px}
+#guard{position:fixed;inset:0;z-index:100;display:grid;place-items:center;background:var(--bg);transition:opacity .4s}
+#guard::after{content:"";width:40px;height:40px;border-radius:50%;border:5px solid rgba(139,108,255,.18);border-top-color:var(--purple);animation:spin .8s linear infinite}
+body.ready #guard{opacity:0;pointer-events:none}
+#app{opacity:0}body.ready #app{opacity:1;transition:opacity .5s .1s}
+.nav{position:sticky;top:12px;z-index:20;display:flex;align-items:center;justify-content:space-between;gap:16px;margin:12px 16px 0;padding:12px 20px;border-radius:30px;background:var(--surface);box-shadow:var(--clay)}
+.brand{display:flex;align-items:center;gap:11px;font-size:19px;font-weight:900;text-decoration:none;color:inherit}
+.brand span{color:var(--purple)}
+.brand-icon{width:40px;height:40px;display:grid;place-items:center;border-radius:14px;color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:5px 6px 12px rgba(123,92,245,.4),inset -3px -3px 6px rgba(60,30,140,.35),inset 3px 3px 6px rgba(255,255,255,.45)}
+.links{display:flex;gap:6px}
+.links a{padding:10px 16px;border-radius:16px;color:var(--muted);font-size:13px;font-weight:800;text-decoration:none}
+.links a:hover{color:var(--purple);box-shadow:var(--clay)}
+.links a.active{color:var(--purple);box-shadow:var(--press)}
+.user{display:flex;align-items:center;gap:10px}
+.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-weight:900;color:#fff;background:linear-gradient(145deg,#ffb6d3,#ff8fbd);box-shadow:5px 6px 12px rgba(255,143,189,.45),inset 3px 3px 6px rgba(255,255,255,.55)}
+.user-name{font-size:13px;font-weight:800;max-width:140px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.logout{border:none;background:var(--surface);font-size:12.5px;font-weight:800;padding:10px 16px;border-radius:16px;cursor:pointer;box-shadow:var(--clay)}
+.logout:hover{color:#e0457f;box-shadow:var(--hover)}
+.wrap{max-width:1100px;margin:0 auto;padding:0 24px}
+.head{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;flex-wrap:wrap;padding:48px 0 26px}
+.head h1{font-size:clamp(32px,5vw,48px);font-weight:900;letter-spacing:-1.5px;line-height:1.1}
+.head p{color:var(--muted);font-weight:600;margin-top:8px}
+.grad{background:linear-gradient(90deg,#7c5cff,#ff6fa5,#4aa3ff);-webkit-background-clip:text;background-clip:text;color:transparent}
+.btn{display:inline-block;border:none;border-radius:22px;color:#fff;font-size:14px;font-weight:800;padding:15px 26px;cursor:pointer;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:var(--btn);transition:transform .2s}
+.btn:hover{transform:translateY(-3px)}
+.btn:disabled{opacity:.7;cursor:wait;transform:none}
+.btn.soft{background:var(--surface);color:var(--text);box-shadow:var(--clay)}
+.btn.good{background:linear-gradient(145deg,#a2f0d8,#3fcf9f);color:#0d4a37}
+.btn.danger{background:linear-gradient(145deg,#ff9db7,#ee5c86)}
+.tools{display:flex;gap:14px;flex-wrap:wrap;align-items:center;margin-bottom:28px}
+.search{flex:1 1 240px}
+.in{width:100%;height:50px;padding:0 18px;border:none;border-radius:20px;background:#eceeff;box-shadow:var(--field);color:var(--text);outline:none;font:inherit;font-size:14px;font-weight:700}
+.in:focus{box-shadow:var(--field),0 0 0 3px rgba(139,108,255,.4)}
+.in::placeholder{color:#a9a6c6}
+textarea.in{height:auto;padding:14px 18px;min-height:90px;resize:vertical;line-height:1.5}
+select.in{cursor:pointer;width:auto;min-width:160px}
+.tabs{display:flex;gap:6px;padding:6px;border-radius:22px;background:#e8eaff;box-shadow:var(--press)}
+.tab{border:none;background:transparent;color:var(--muted);padding:11px 18px;border-radius:16px;font-size:13px;font-weight:800;cursor:pointer}
+.tab.on{color:#fff;background:linear-gradient(145deg,#a58bff,#7b5cf5);box-shadow:5px 6px 12px rgba(123,92,245,.4),inset 3px 3px 6px rgba(255,255,255,.4)}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:26px;margin-bottom:60px}
+.item{text-align:left;border:none;cursor:pointer;padding:14px 14px 18px;border-radius:32px;background:var(--surface);box-shadow:var(--clay);display:flex;flex-direction:column;gap:10px;transition:transform .3s,box-shadow .3s}
+.item:hover{transform:translateY(-8px);box-shadow:var(--hover)}
+.item.done{opacity:.6}
+.media{position:relative;height:160px;border-radius:24px;overflow:hidden;display:grid;place-items:center;font-size:54px;box-shadow:inset 4px 4px 10px rgba(255,255,255,.55)}
+.media img{width:100%;height:100%;object-fit:cover}
+.pill{position:absolute;top:10px;left:10px;padding:6px 12px;border-radius:14px;font-size:11px;font-weight:900;color:#fff;background:var(--lost)}
+.pill.found{background:var(--found)}
+.pill.you{left:auto;right:10px;background:#7b5cf5}
+.pill.ok{left:auto;right:10px;background:#3b3560}
+.pill.sample{left:auto;right:10px;background:#ffb03b;color:#5c3b00}
+.item h3{font-size:16px;font-weight:900;padding:0 6px;line-height:1.3}
+.loc{padding:0 6px;font-size:13px;font-weight:800;color:var(--purple)}
+.meta{padding:0 6px;font-size:12px;font-weight:700;color:var(--muted);display:flex;justify-content:space-between;gap:8px}
+.empty{grid-column:1/-1;text-align:center;padding:50px 20px;border-radius:32px;background:var(--surface);box-shadow:var(--press);color:var(--muted);font-weight:700}
+dialog{border:none;border-radius:36px;background:var(--surface);color:var(--text);box-shadow:var(--clay);padding:0;width:min(640px,94vw);max-height:92vh;overflow:auto;margin:auto}
+dialog::backdrop{background:rgba(120,108,190,.4);backdrop-filter:blur(4px)}
+.dlg{padding:30px;position:relative}
+.dlg h2{font-size:26px;font-weight:900;letter-spacing:-.6px;margin-bottom:18px;padding-right:44px}
+.x{position:absolute;top:18px;right:18px;width:42px;height:42px;border-radius:50%;border:none;cursor:pointer;font-weight:900;background:var(--surface);box-shadow:var(--clay)}
+.row{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+.f{margin-bottom:16px}
+.f label,.f .lbl{display:block;font-size:13px;font-weight:800;margin-bottom:8px}
+.drop{display:grid;place-items:center;text-align:center;padding:20px;border-radius:24px;background:#eceeff;box-shadow:var(--field);color:var(--muted);font-size:13px;font-weight:700;cursor:pointer}
+.thumbs{display:flex;gap:12px;flex-wrap:wrap;margin-top:12px}
+.th{position:relative;width:84px;height:84px;border-radius:20px;overflow:hidden;box-shadow:var(--clay)}
+.th img{width:100%;height:100%;object-fit:cover}
+.th button{position:absolute;top:4px;right:4px;width:24px;height:24px;border:none;border-radius:50%;background:rgba(46,42,79,.75);color:#fff;cursor:pointer}
+.err{display:none;margin-bottom:14px;padding:12px 16px;border-radius:18px;background:#ffe4ed;color:#c93a69;font-size:13px;font-weight:700}
+.err.show{display:block}
+.big{height:280px;border-radius:28px;overflow:hidden;display:grid;place-items:center;font-size:80px;margin-bottom:16px}
+.big img{width:100%;height:100%;object-fit:contain;background:#eceeff}
+.tags{display:flex;gap:8px;flex-wrap:wrap;margin:10px 0 14px}
+.tag{padding:7px 14px;border-radius:14px;font-size:12px;font-weight:800;color:var(--purple);background:#eceeff;box-shadow:var(--field)}
+.desc{line-height:1.7;font-weight:600;color:#4a466b;margin-bottom:18px;white-space:pre-wrap;word-break:break-word}
+.who{display:flex;align-items:center;gap:12px;padding:14px 16px;border-radius:22px;background:#eceeff;box-shadow:var(--field);margin-bottom:18px;font-weight:800;font-size:14px}
+.who small{display:block;color:var(--muted);font-size:12px}
+.acts{display:flex;gap:12px;flex-wrap:wrap}.acts a{text-decoration:none}
+.toast{position:fixed;left:50%;bottom:28px;transform:translate(-50%,30px);opacity:0;z-index:200;padding:14px 24px;border-radius:22px;font-weight:800;background:var(--surface);box-shadow:var(--clay);transition:all .35s;pointer-events:none;max-width:92vw;text-align:center}
+.toast.show{opacity:1;transform:translate(-50%,0)}
+@keyframes spin{to{transform:rotate(360deg)}}
+@media(max-width:800px){.links{display:none}}
+@media(max-width:560px){.nav{margin:10px;padding:10px 14px}.user-name{display:none}.wrap{padding:0 14px}.row{grid-template-columns:1fr}.dlg{padding:22px 18px}}
+@media(prefers-reduced-motion:reduce){*{transition-duration:.01ms!important;animation-duration:.01ms!important}}
+</style>
+</head>
+<body>
+<div id="guard" aria-label="Checking login"></div>
+<div id="app">
+  <header class="nav">
+    <a class="brand" href="dashboard.html"><div class="brand-icon">✦</div><div>Campus<span>Connect</span></div></a>
+    <nav class="links" aria-label="Main">
+      <a href="dashboard.html">Home</a>
+      <a href="marketplace.html">Buy &amp; Sell</a>
+      <a href="lostfound.html" class="active">Lost &amp; Found</a>
+    </nav>
+    <div class="user"><div class="avatar" id="avatar">?</div><div class="user-name" id="userName"></div><button class="logout" id="logoutBtn" type="button">Log out</button></div>
+  </header>
+
+  <main class="wrap">
+    <section class="head">
+      <div>
+        <h1>Lost <span class="grad">&amp; Found</span></h1>
+        <p>Lost something on campus? Found something? Post it so the right person can find it.</p>
+      </div>
+      <button class="btn" id="postBtn" type="button">+ Report an item</button>
+    </section>
+
+    <section class="tools">
+      <div class="search"><input class="in" id="q" type="search" placeholder="Search ID card, bottle, keys…" aria-label="Search items"></div>
+      <div class="tabs" id="typeTabs">
+        <button class="tab on" data-type="all" type="button">All</button>
+        <button class="tab" data-type="lost" type="button">Lost</button>
+        <button class="tab" data-type="found" type="button">Found</button>
+      </div>
+      <select class="in" id="catFilter" aria-label="Category"></select>
+    </section>
+
+    <section class="grid" id="grid" aria-live="polite"></section>
+  </main>
+</div>
+
+<dialog id="postDlg">
+  <div class="dlg">
+    <button class="x" type="button" data-close aria-label="Close">✕</button>
+    <h2>Report an item</h2>
+    <form id="postForm" novalidate>
+      <div class="f">
+        <span class="lbl">What happened?</span>
+        <div class="tabs" id="kind">
+          <button class="tab on" type="button" data-kind="lost" style="flex:1">I lost something</button>
+          <button class="tab" type="button" data-kind="found" style="flex:1">I found something</button>
+        </div>
+      </div>
+      <div class="f"><label for="title">Item</label><input class="in" id="title" maxlength="80" placeholder="e.g. Black wallet with student ID" required></div>
+      <div class="row">
+        <div class="f"><label for="cat">Category</label><select class="in" id="cat" style="width:100%"></select></div>
+        <div class="f"><label for="date" id="dateLbl">Date lost</label><input class="in" id="date" type="date" required></div>
+      </div>
+      <div class="row">
+        <div class="f"><label for="place" id="placeLbl">Where did you lose it?</label><input class="in" id="place" maxlength="80" placeholder="e.g. Library, 2nd floor" required></div>
+        <div class="f"><label for="phone">Phone / WhatsApp (optional)</label><input class="in" id="phone" type="tel" maxlength="15" placeholder="Shown to logged-in students"></div>
+      </div>
+      <div class="f"><label for="desc">Details</label><textarea class="in" id="desc" maxlength="500" placeholder="Colour, brand, marks, anything that proves it's yours. If you found it, say where it is now."></textarea></div>
+      <div class="f">
+        <span class="lbl">Photo (optional, up to 2)</span>
+        <label class="drop" for="files"><div>📷 Click to add a photo</div></label>
+        <input id="files" type="file" accept="image/*" multiple hidden>
+        <div class="thumbs" id="thumbs"></div>
+      </div>
+      <div class="err" id="err" role="alert"></div>
+      <div class="acts"><button class="btn" id="submitBtn" type="submit">Post report</button><button class="btn soft" type="button" data-close>Cancel</button></div>
+    </form>
+  </div>
+</dialog>
+
+<dialog id="viewDlg"><div class="dlg" id="viewBody"></div></dialog>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import { getAuth, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import { getFirestore, collection, addDoc, deleteDoc, updateDoc, doc, query, orderBy, limit, onSnapshot, serverTimestamp }
+  from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const LOGIN_PAGE = "index.html";
+const firebaseConfig = {
+  apiKey: "AIzaSyCKfSjhTBaoK9Kjm_NFx7I0Yf8WT7vyWPo",
+  authDomain: "universityconnect-culko.firebaseapp.com",
+  projectId: "universityconnect-culko",
+  storageBucket: "universityconnect-culko.firebasestorage.app",
+  messagingSenderId: "1045958757342",
+  appId: "1:1045958757342:web:a22f5aecc6b97e982a6b4f",
+  measurementId: "G-3KFVCBL1M2"
+};
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+const COL = "lostfound";
+
+const CATS = {
+  "ID & Cards": ["🪪", "#c4e0ff", "#8fc2ff"], "Keys": ["🔑", "#ffe9b0", "#ffcd66"],
+  "Bags & Wallets": ["👜", "#ffcfe2", "#ff9fc7"], "Electronics": ["🎧", "#b4f3de", "#7de6c6"],
+  "Books & Notes": ["📘", "#e0d4ff", "#b49cff"], "Clothing": ["🧥", "#ffdfbd", "#ffbb7d"], "Other": ["📦", "#dcdff7", "#b8bdea"]
+};
+const SAMPLES = [
+  { id: "s1", sample: true, type: "lost", title: "Blue water bottle", category: "Other", place: "Sports ground", date: "2026-10-12", description: "Steel bottle with a dent near the base and a sticker of a mountain.", ownerName: "Aarav", ago: "2 days ago" },
+  { id: "s2", sample: true, type: "found", title: "Student ID card", category: "ID & Cards", place: "Canteen", date: "2026-10-13", description: "Found on a table near the counter. Handed over to the canteen manager.", ownerName: "Meera", ago: "Yesterday" }
+];
+
+let me = null, items = [];
+const state = { type: "all", cat: "all", q: "" };
+const $ = id => document.getElementById(id);
+const el = (t, c, x) => { const n = document.createElement(t); if (c) n.className = c; if (x != null) n.textContent = x; return n; };
+const isImg = s => typeof s === "string" && s.startsWith("data:image/jpeg;base64,");
+const when = i => i.sample ? i.ago : (() => {
+  const t = i.createdAt && i.createdAt.toMillis ? i.createdAt.toMillis() : Date.now();
+  const m = Math.max(0, Math.round((Date.now() - t) / 60000));
+  if (m < 1) return "Just now"; if (m < 60) return m + " min ago";
+  const h = Math.round(m / 60); if (h < 24) return h + " hr ago";
+  const d = Math.round(h / 24); return d + (d === 1 ? " day ago" : " days ago");
+})();
+let tt;
+function toast(m) { const t = $("toast"); t.textContent = m; t.classList.add("show"); clearTimeout(tt); tt = setTimeout(() => t.classList.remove("show"), 2800); }
+function media(item, cls) {
+  const box = el("div", cls), first = (item.images || []).find(isImg);
+  if (first) { const im = document.createElement("img"); im.src = first; im.alt = item.title; im.loading = "lazy"; box.appendChild(im); }
+  else { const c = CATS[item.category] || CATS.Other; box.style.background = `linear-gradient(145deg,${c[1]},${c[2]})`; box.textContent = c[0]; }
+  return box;
+}
+
+// ---------- Auth guard ----------
+onAuthStateChanged(auth, user => {
+  if (!user) { location.replace(LOGIN_PAGE); return; }
+  me = user;
+  const name = user.displayName || user.email.split("@")[0];
+  $("userName").textContent = name;
+  $("avatar").textContent = name.trim().charAt(0).toUpperCase();
+  document.body.classList.add("ready");
+  listen();
+});
+window.addEventListener("pageshow", e => { if (e.persisted) location.reload(); });
+$("logoutBtn").addEventListener("click", async () => { await signOut(auth); location.replace(LOGIN_PAGE); });
+
+let started = false;
+function listen() {
+  if (started) return; started = true;
+  onSnapshot(query(collection(db, COL), orderBy("createdAt", "desc"), limit(100)), snap => {
+    items = snap.docs.map(d => ({ id: d.id, ...d.data() })); render();
+  }, err => { console.error(err); toast("Couldn't load items. Check your Firestore rules."); render(); });
+}
+
+// ---------- Filters ----------
+const catFilter = $("catFilter"), catSel = $("cat");
+catFilter.appendChild(new Option("All categories", "all"));
+Object.keys(CATS).forEach(c => { catFilter.appendChild(new Option(c, c)); catSel.appendChild(new Option(c, c)); });
+$("typeTabs").addEventListener("click", e => {
+  const b = e.target.closest(".tab"); if (!b) return;
+  state.type = b.dataset.type;
+  document.querySelectorAll("#typeTabs .tab").forEach(t => t.classList.toggle("on", t === b)); render();
+});
+catFilter.addEventListener("change", () => { state.cat = catFilter.value; render(); });
+$("q").addEventListener("input", e => { state.q = e.target.value.trim().toLowerCase(); render(); });
+
+// ---------- Grid ----------
+function render() {
+  const grid = $("grid"); grid.replaceChildren();
+  const all = [...items, ...SAMPLES].filter(i =>
+    (state.type === "all" || i.type === state.type) && (state.cat === "all" || i.category === state.cat) &&
+    (!state.q || (i.title + " " + (i.description || "") + " " + (i.place || "")).toLowerCase().includes(state.q)));
+  if (!all.length) { grid.appendChild(el("div", "empty", "No items match yet. Try another word, or report one.")); return; }
+  all.forEach(item => {
+    const card = el("button", "item" + (item.resolved ? " done" : "")); card.type = "button";
+    const m = media(item); m.className = "media";
+    m.appendChild(el("span", "pill" + (item.type === "found" ? " found" : ""), item.type === "found" ? "Found" : "Lost"));
+    if (item.sample) m.appendChild(el("span", "pill sample", "Sample"));
+    else if (item.resolved) m.appendChild(el("span", "pill ok", item.type === "found" ? "Claimed" : "Returned"));
+    else if (me && item.ownerId === me.uid) m.appendChild(el("span", "pill you", "Yours"));
+    const meta = el("div", "meta"); meta.append(el("span", "", item.category), el("span", "", when(item)));
+    card.append(m, el("h3", "", item.title), el("div", "loc", "📍 " + (item.place || "Campus")), meta);
+    card.addEventListener("click", () => openDetail(item));
+    grid.appendChild(card);
+  });
+}
+
+// ---------- Detail ----------
+const viewDlg = $("viewDlg");
+function openDetail(item) {
+  const body = $("viewBody"); body.replaceChildren();
+  const x = el("button", "x", "✕"); x.type = "button"; x.setAttribute("aria-label", "Close"); x.addEventListener("click", () => viewDlg.close());
+  body.appendChild(x);
+  const imgs = (item.images || []).filter(isImg);
+  body.appendChild(media(item, "big"));
+  if (imgs.length > 1) { const g = el("div", "thumbs"); imgs.forEach(s => { const t = el("div", "th"); const im = document.createElement("img"); im.src = s; im.alt = ""; t.appendChild(im); t.addEventListener("click", () => body.querySelector(".big img").src = s); g.appendChild(t); }); body.appendChild(g); }
+  body.appendChild(el("h2", "", item.title));
+  const tags = el("div", "tags");
+  tags.append(el("span", "tag", item.type === "found" ? "Found" : "Lost"), el("span", "tag", item.category), el("span", "tag", "📍 " + (item.place || "Campus")));
+  if (item.date) tags.appendChild(el("span", "tag", "📅 " + item.date));
+  body.appendChild(tags);
+  if (item.description) body.appendChild(el("p", "desc", item.description));
+
+  const who = el("div", "who");
+  const w = el("div", "", (item.type === "found" ? "Found by " : "Lost by ") + (item.ownerName || "a student"));
+  if (item.contactPhone) w.appendChild(el("small", "", "📞 " + item.contactPhone));
+  who.append(el("div", "avatar", (item.ownerName || "?").charAt(0).toUpperCase()), w);
+  body.appendChild(who);
+
+  const acts = el("div", "acts"), mine = me && item.ownerId === me.uid;
+  if (item.sample) {
+    const b = el("button", "btn", "Contact"); b.type = "button";
+    b.addEventListener("click", () => toast("This is a sample. Real reports show a contact button.")); acts.appendChild(b);
+  } else if (mine) {
+    if (!item.resolved) {
+      const r = el("button", "btn good", item.type === "found" ? "Mark as claimed" : "Mark as returned"); r.type = "button";
+      r.addEventListener("click", async () => {
+        try { await updateDoc(doc(db, COL, item.id), { resolved: true }); viewDlg.close(); toast("Marked as done. Glad it worked out!"); }
+        catch (e) { console.error(e); toast("Couldn't update it. Please try again."); }
+      }); acts.appendChild(r);
+    }
+    const d = el("button", "btn danger", "Delete report"); d.type = "button";
+    d.addEventListener("click", async () => {
+      if (!confirm("Delete this report? This can't be undone.")) return;
+      try { await deleteDoc(doc(db, COL, item.id)); viewDlg.close(); toast("Report deleted."); }
+      catch (e) { console.error(e); toast("Couldn't delete it. Please try again."); }
+    }); acts.appendChild(d);
+  } else if (item.ownerEmail && /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(item.ownerEmail)) {
+    const a = el("a", "btn", item.type === "found" ? "This is mine" : "I found it");
+    a.href = "mailto:" + item.ownerEmail + "?subject=" + encodeURIComponent("CampusConnect Lost & Found: " + item.title);
+    acts.appendChild(a);
+  }
+  const c = el("button", "btn soft", "Close"); c.type = "button"; c.addEventListener("click", () => viewDlg.close());
+  acts.appendChild(c); body.appendChild(acts);
+  viewDlg.showModal();
+}
+
+// ---------- Post ----------
+const postDlg = $("postDlg"), form = $("postForm");
+let kind = "lost", pending = [];
+function setKind(k) {
+  kind = k;
+  document.querySelectorAll("#kind .tab").forEach(t => t.classList.toggle("on", t.dataset.kind === k));
+  $("dateLbl").textContent = k === "lost" ? "Date lost" : "Date found";
+  $("placeLbl").textContent = k === "lost" ? "Where did you lose it?" : "Where did you find it?";
+}
+$("kind").addEventListener("click", e => { const b = e.target.closest(".tab"); if (b) setKind(b.dataset.kind); });
+const showErr = m => { const e = $("err"); e.textContent = m || ""; e.classList.toggle("show", !!m); };
+function thumbs() {
+  const box = $("thumbs"); box.replaceChildren();
+  pending.forEach((src, i) => {
+    const t = el("div", "th"), im = document.createElement("img"); im.src = src; im.alt = "Selected photo " + (i + 1);
+    const rm = el("button", "", "✕"); rm.type = "button"; rm.setAttribute("aria-label", "Remove photo");
+    rm.addEventListener("click", () => { pending.splice(i, 1); thumbs(); });
+    t.append(im, rm); box.appendChild(t);
+  });
+}
+function compress(file) {
+  return new Promise((res, rej) => {
+    const url = URL.createObjectURL(file), img = new Image();
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      const s = Math.min(1, 800 / Math.max(img.width, img.height)), c = document.createElement("canvas");
+      c.width = Math.max(1, Math.round(img.width * s)); c.height = Math.max(1, Math.round(img.height * s));
+      const x = c.getContext("2d"); x.fillStyle = "#fff"; x.fillRect(0, 0, c.width, c.height); x.drawImage(img, 0, 0, c.width, c.height);
+      res(c.toDataURL("image/jpeg", 0.72));
+    };
+    img.onerror = () => { URL.revokeObjectURL(url); rej(); };
+    img.src = url;
+  });
+}
+$("files").addEventListener("change", async e => {
+  showErr("");
+  for (const f of [...e.target.files].filter(f => f.type.startsWith("image/"))) {
+    if (pending.length >= 2) { showErr("You can add up to 2 photos."); break; }
+    if (f.size > 10 * 1024 * 1024) { showErr("Each photo must be under 10 MB."); continue; }
+    try { pending.push(await compress(f)); } catch { showErr("One file couldn't be read as an image."); }
+  }
+  e.target.value = ""; thumbs();
+});
+$("postBtn").addEventListener("click", () => {
+  form.reset(); pending = []; thumbs(); setKind("lost"); showErr("");
+  $("date").max = new Date().toISOString().split("T")[0]; $("date").value = $("date").max;
+  postDlg.showModal(); $("title").focus();
+});
+document.querySelectorAll("[data-close]").forEach(b => b.addEventListener("click", () => postDlg.close()));
+[postDlg, viewDlg].forEach(d => d.addEventListener("click", e => { if (e.target === d) d.close(); }));
+
+form.addEventListener("submit", async e => {
+  e.preventDefault(); showErr("");
+  const title = $("title").value.trim(), place = $("place").value.trim(), date = $("date").value, phone = $("phone").value.trim();
+  if (title.length < 3) return showErr("Add an item name of at least 3 characters.");
+  if (place.length < 2) return showErr("Tell us where it was " + (kind === "lost" ? "lost." : "found."));
+  if (!date) return showErr("Choose the date.");
+  if (phone && !/^[0-9+\-\s]{7,15}$/.test(phone)) return showErr("Phone number can only contain digits, spaces, + and -.");
+  if (pending.join("").length > 600000) return showErr("Photos are too large together. Remove one.");
+  const btn = $("submitBtn"); btn.disabled = true; btn.textContent = "Posting…";
+  try {
+    await addDoc(collection(db, COL), {
+      type: kind, title, category: $("cat").value, place, date,
+      description: $("desc").value.trim(), contactPhone: phone, images: pending, resolved: false,
+      ownerId: me.uid, ownerName: me.displayName || me.email.split("@")[0], ownerEmail: me.email,
+      createdAt: serverTimestamp()
+    });
+    postDlg.close(); toast("Your report is live.");
+  } catch (err) { console.error(err); showErr("Couldn't post your report. Check your connection and Firestore rules, then try again."); }
+  finally { btn.disabled = false; btn.textContent = "Post report"; }
+});
+
+render();
+</script>
+</body>
+</html>
