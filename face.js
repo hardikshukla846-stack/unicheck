@@ -43,10 +43,23 @@ export function loadFace() {
 }
 
 export async function openCamera(video) {
-  const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user", width: { ideal: 640 } }, audio: false });
-  video.srcObject = stream;
-  await video.play();
-  return stream;
+  if (!navigator.mediaDevices || !navigator.mediaDevices.getUserMedia) throw Object.assign(new Error("no-mediadevices"), { name: "SecurityError" });
+  // The camera box starts hidden; a video inside a hidden box may never start on mobile Chrome.
+  const box = video.parentElement; if (box && box.hidden) box.hidden = false;
+  video.muted = true; video.setAttribute("playsinline", "");
+  let stream;
+  try {
+    stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: "user" }, audio: false });
+    video.srcObject = stream;
+    await video.play();
+    // wait until real frames are available
+    for (let i = 0; i < 50 && !video.videoWidth; i++) await sleep(100);
+    if (!video.videoWidth) throw new Error("no-frames");
+    return stream;
+  } catch (e) {
+    if (stream) stream.getTracks().forEach(t => t.stop());
+    throw e;
+  }
 }
 export function closeCamera(stream) { if (stream) stream.getTracks().forEach(t => t.stop()); }
 
@@ -97,11 +110,15 @@ export async function scanFace(video, status, control) {
 export const faceDistance = (a, b) => Math.sqrt(a.reduce((s, v, i) => s + (v - b[i]) ** 2, 0));
 
 export function faceError(err) {
-  switch (err && err.message) {
-    case "cancelled": return "";
-    case "no-blink": return "Couldn't see you blink. Face the camera in good light and try again.";
-    case "no-face": return "Couldn't read your face. Try again in better light.";
-    case "face-lib": return "Couldn't load face recognition. Check your connection or try another network.";
-    default: return "Couldn't use the camera. Allow camera access and open the site over https.";
-  }
+  const m = err && err.message, n = err && err.name;
+  if (m === "cancelled") return "";
+  if (m === "no-blink") return "Couldn't see you blink. Face the camera in good light and try again.";
+  if (m === "no-face") return "Couldn't read your face. Try again in better light.";
+  if (m === "face-lib") return "Couldn't load face recognition. Check your connection or try another network.";
+  if (n === "NotAllowedError" || n === "SecurityError" || m === "no-mediadevices")
+    return "Camera is blocked. Tap the lock icon next to the address bar, set Camera to Allow, then reload the page. (Also check Android Settings > Apps > Chrome > Permissions > Camera.)";
+  if (n === "NotFoundError" || n === "OverconstrainedError") return "No front camera was found on this device.";
+  if (n === "NotReadableError" || n === "AbortError") return "The camera is busy. Close other apps or tabs using the camera and try again.";
+  if (m === "no-frames") return "The camera opened but gave no picture. Close other camera apps and try again.";
+  return "Face scan failed (" + (n || "Error") + ": " + (m || "unknown") + "). Please send this message to the developer.";
 }
