@@ -48,6 +48,8 @@ h1{font-size:26px;font-weight:900;letter-spacing:-.6px}
 .qrbox canvas{display:block;width:min(280px,70vw);height:auto;image-rendering:pixelated}
 .code{font-family:ui-monospace,Consolas,monospace;font-size:14px;font-weight:800;letter-spacing:1px;word-break:break-all;margin-bottom:6px}
 .msg.ok{background:#dcf8ee;color:#1c7f5f}
+.pbar{height:8px;border-radius:8px;background:#dcdff7;box-shadow:inset 2px 2px 4px rgba(130,118,200,.25);overflow:hidden;margin:0 0 16px}
+.pbar i{display:block;height:100%;width:0;border-radius:8px;background:linear-gradient(90deg,#a58bff,#7b5cf5);transition:width .4s ease}
 #faceVideo,#enrollVideo{transform:scaleX(-1)}
 .consent{display:flex;gap:10px;align-items:flex-start;text-align:left;font-size:12.5px;font-weight:700;color:#4a466b;margin-bottom:16px;line-height:1.5;cursor:pointer}
 .consent input{margin-top:3px;accent-color:#8b6cff}
@@ -93,6 +95,7 @@ h1{font-size:26px;font-weight:900;letter-spacing:-.6px}
   <div class="card" id="face" hidden>
     <h1>Face check</h1>
     <p class="sub" id="faceHint">Loading…</p>
+    <div class="pbar"><i id="faceBar"></i></div>
     <div class="cam"><video id="faceVideo" playsinline muted></video></div>
     <button class="btn soft" id="cancelFace" type="button">Cancel</button>
   </div>
@@ -105,6 +108,7 @@ h1{font-size:26px;font-weight:900;letter-spacing:-.6px}
     <label class="consent"><input type="checkbox" id="enrollConsent"> I agree to my face data (a number code, not my photo) being saved only to verify my library check-ins.</label>
     <div class="cam" id="enrollCam" hidden><video id="enrollVideo" playsinline muted></video></div>
     <p class="sub" id="enrollHint"></p>
+    <div class="pbar"><i id="enrollBar"></i></div>
     <div class="msg" id="enrollMsg" role="alert"></div>
     <button class="btn" id="enrollBtn" type="button">Register my face</button>
     <button class="btn soft" id="enrollBack" type="button">Back</button>
@@ -228,6 +232,7 @@ onAuthStateChanged(auth, async user => {
     $("fUid").textContent = profile.uid || snap.docs[0].id;
     $("fCourse").textContent = profile.course || "-";
     await resumeVisit();
+    faceLib().then(F => F.loadFace()).catch(() => {});   // download face models in the background
   } catch (err) {
     console.error(err); show("checkin"); $("scanBtn").hidden = true;
     setMsg("msg", "Couldn't load your profile. Check your connection and try again.");
@@ -241,7 +246,6 @@ function extractCode(text) {
   return /^[A-Za-z0-9]{8,64}$/.test(c) ? c : null;
 }
 $("scanBtn").addEventListener("click", async () => {
-  faceLib().then(F => F.loadFace()).catch(() => {});   // preload face models in the background
   setMsg("msg", ""); setMsg("scanMsg", "");
   if (!faceDesc) { setMsg("enrollMsg", ""); show("enroll"); return; }
   const last = Number(lsGet("libLast_" + me.uid) || 0);
@@ -297,15 +301,18 @@ async function loop() {
 
 // ---------- Student: face check and first-time face registration ----------
 let faceMod = null;   // face.js is loaded only when needed, so this page opens even if it is missing
-const faceLib = async () => faceMod || (faceMod = await import("./face.js?v=6"));
+const faceLib = async () => faceMod || (faceMod = await import("./face.js"));
 const faceMsg = err => faceMod ? faceMod.faceError(err) : "Couldn't load face.js. Save it in the same folder as this page and open the site with Live Server or your https address.";
 async function verifyThenSubmit(code) {
-  faceCtl = { cancelled: false }; setMsg("msg", ""); $("faceHint").textContent = "Loading face recognition…"; show("face");
+  faceCtl = { cancelled: false }; setMsg("msg", ""); show("face");
+  const prog = (m, p) => { $("faceHint").textContent = m; $("faceBar").style.width = (p || 0) + "%"; };
+  prog("Starting camera…", 5);
   let cam = null;
   try {
-    const F = await faceLib(); await F.loadFace();
+    const F = await faceLib();
     cam = await F.openCamera($("faceVideo"));
-    const d = await F.scanFace($("faceVideo"), m => { $("faceHint").textContent = m; }, faceCtl);
+    await F.loadFace(prog);
+    const d = await F.scanFace($("faceVideo"), prog, faceCtl);
     if (F.faceDistance(d, faceDesc) > F.FACE_THRESHOLD) { show("checkin"); return setMsg("msg", "Your face doesn't match this account, so check-in was cancelled."); }
   } catch (err) { console.error(err); show("checkin"); return setMsg("msg", faceMsg(err)); }
   finally { if (faceMod) faceMod.closeCamera(cam); }
@@ -318,13 +325,16 @@ $("enrollBtn").addEventListener("click", async () => {
   if (!$("enrollConsent").checked) return setMsg("enrollMsg", "Please tick the consent box first.");
   const b = $("enrollBtn"); b.disabled = true; faceCtl = { cancelled: false }; let cam = null;
   try {
-    $("enrollHint").textContent = "Loading face recognition…"; const F = await faceLib(); await F.loadFace();
+    const prog = (m, p) => { $("enrollHint").textContent = m; $("enrollBar").style.width = (p || 0) + "%"; };
+    prog("Starting camera…", 5);
+    const F = await faceLib();
     cam = await F.openCamera($("enrollVideo")); $("enrollCam").hidden = false;
-    const d = await F.scanFace($("enrollVideo"), m => { $("enrollHint").textContent = m; }, faceCtl);
+    await F.loadFace(prog);
+    const d = await F.scanFace($("enrollVideo"), prog, faceCtl);
     await setDoc(doc(db, "faces", me.uid), { descriptor: d, consent: true, createdAt: serverTimestamp() });
     faceDesc = d; show("checkin"); setMsg("msg", "Face registered. Now scan the library QR to check in.", true);
   } catch (err) { console.error(err); setMsg("enrollMsg", faceMsg(err) || (err.code ? "Couldn't save your face. Check your Firestore rules." : "")); }
-  finally { if (faceMod) faceMod.closeCamera(cam); $("enrollCam").hidden = true; $("enrollHint").textContent = ""; b.disabled = false; }
+  finally { if (faceMod) faceMod.closeCamera(cam); $("enrollCam").hidden = true; $("enrollHint").textContent = ""; $("enrollBar").style.width = "0%"; b.disabled = false; }
 });
 
 // ---------- Student: save the check-in ----------

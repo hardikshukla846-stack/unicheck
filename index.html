@@ -275,6 +275,8 @@
         .face-status { font-size: 12px; font-weight: 700; color: var(--muted); margin: 10px 0 12px; line-height: 1.5; }
         .face-btn { width: 100%; height: 44px; border: none; border-radius: 18px; font: inherit; font-size: 13px; font-weight: 800; cursor: pointer; background: var(--surface); color: var(--text); box-shadow: var(--clay); }
         .face-btn:disabled { opacity: .6; cursor: wait; }
+        .pbar { height: 8px; border-radius: 8px; background: #dcdff7; box-shadow: inset 2px 2px 4px rgba(130,118,200,.25); overflow: hidden; margin: 0 0 12px; }
+        .pbar i { display: block; height: 100%; width: 0; border-radius: 8px; background: linear-gradient(90deg, #a58bff, #7b5cf5); transition: width .4s ease; }
 
         /* Responsive */
         @media (max-width: 800px) {
@@ -447,20 +449,27 @@ const faceBtn = document.getElementById("faceBtn");
 const faceStatus = document.getElementById("faceStatus");
 const faceVideo = document.getElementById("faceVideo");
 const camBox = document.getElementById("camBox");
+const faceBar = document.getElementById("faceBar");
+const setProg = (m, p) => { faceStatus.textContent = m; faceBar.style.width = (p || 0) + "%"; };
+// Start downloading the face models in the background as soon as the sign-up tab is opened
+let preloaded = false;
+const preloadFace = () => { if (preloaded) return; preloaded = true; import("./face.js").then(F => F.loadFace()).catch(() => { preloaded = false; }); };
+[signupTab, ...document.querySelectorAll(".switchSignup")].forEach(b => b.addEventListener("click", preloadFace));
 faceBtn.addEventListener("click", async () => {
   clearNotice();
   if (!document.getElementById("faceConsent").checked) return showNotice("Please tick the face data consent box first.");
-  faceBtn.disabled = true; faceDesc = null; faceStatus.textContent = "Loading face recognition…";
+  faceBtn.disabled = true; faceDesc = null; setProg("Starting camera…", 5);
   let stream = null, F = null;
   try {
-    F = await import("./face.js?v=6");   // loaded only now, so the login page works even if face.js is missing
-    await F.loadFace();
-    stream = await F.openCamera(faceVideo); camBox.hidden = false;
-    faceDesc = await F.scanFace(faceVideo, m => { faceStatus.textContent = m; });
+    F = await import("./face.js");   // loaded only now, so the login page works even if face.js is missing
+    stream = await F.openCamera(faceVideo); camBox.hidden = false;   // camera first, so you can see yourself right away
+    await F.loadFace(setProg);
+    faceDesc = await F.scanFace(faceVideo, setProg);
     faceStatus.textContent = "Face registered ✓";
     faceBtn.textContent = "Register again";
   } catch (err) {
     console.error(err);
+    faceBar.style.width = "0%";
     faceStatus.textContent = F ? (F.faceError(err) || "Face registration cancelled.") : "Couldn't load face.js. Save it in the same folder as this page and open the site with Live Server or your https address.";
   } finally { if (F) F.closeCamera(stream); camBox.hidden = true; faceBtn.disabled = false; }
 });
@@ -532,7 +541,7 @@ signupView.addEventListener("submit", async event => {
     await signOut(auth);
 
     signupView.reset();
-    faceDesc = null; faceStatus.textContent = "Not registered yet"; faceBtn.textContent = "Register my face";
+    faceDesc = null; faceStatus.textContent = "Not registered yet"; faceBar.style.width = "0%"; faceBtn.textContent = "Register my face";
     switchForm("login");
     showNotice("Account created successfully! You can now log in with your UID and password.", "success");
   } catch (err) {
@@ -958,6 +967,7 @@ document.querySelectorAll("input, select").forEach(i => {
                     </label>
                     <div class="cam" id="camBox" hidden><video id="faceVideo" playsinline muted></video></div>
                     <div class="face-status" id="faceStatus">Not registered yet</div>
+                    <div class="pbar"><i id="faceBar"></i></div>
                     <button type="button" class="face-btn" id="faceBtn">Register my face</button>
                 </div>
 
