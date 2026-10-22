@@ -328,7 +328,8 @@ $("enrollBtn").addEventListener("click", async () => {
     const prog = (m, p) => { $("enrollHint").textContent = m; $("enrollBar").style.width = (p || 0) + "%"; };
     prog("Starting camera…", 5);
     const F = await faceLib();
-    cam = await F.openCamera($("enrollVideo")); $("enrollCam").hidden = false;
+    $("enrollCam").hidden = false;   // show the picture box first: a hidden video can give a black picture
+    cam = await F.openCamera($("enrollVideo"));
     await F.loadFace(prog);
     const d = await F.scanFace($("enrollVideo"), prog, faceCtl);
     await setDoc(doc(db, "faces", me.uid), { descriptor: d, consent: true, createdAt: serverTimestamp() });

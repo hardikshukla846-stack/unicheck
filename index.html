@@ -462,7 +462,8 @@ faceBtn.addEventListener("click", async () => {
   let stream = null, F = null;
   try {
     F = await import("./face.js");   // loaded only now, so the login page works even if face.js is missing
-    stream = await F.openCamera(faceVideo); camBox.hidden = false;   // camera first, so you can see yourself right away
+    camBox.hidden = false;   // show the picture box first: a hidden video can give a black picture
+    stream = await F.openCamera(faceVideo);
     await F.loadFace(setProg);
     faceDesc = await F.scanFace(faceVideo, setProg);
     faceStatus.textContent = "Face registered ✓";
