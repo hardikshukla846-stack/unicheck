@@ -301,7 +301,7 @@ async function loop() {
 
 // ---------- Student: face check and first-time face registration ----------
 let faceMod = null;   // face.js is loaded only when needed, so this page opens even if it is missing
-const faceLib = async () => faceMod || (faceMod = await import("./face.js?v=fast1"));
+const faceLib = async () => faceMod || (faceMod = await import("./face.js?v=fast3"));
 const faceMsg = err => faceMod ? faceMod.faceError(err) : "Couldn't load face.js. Save it in the same folder as this page and open the site with Live Server or your https address.";
 async function verifyThenSubmit(code) {
   faceCtl = { cancelled: false }; setMsg("msg", ""); show("face");
@@ -314,7 +314,8 @@ async function verifyThenSubmit(code) {
     try { await F.loadFace(prog); } catch (e) { camP.then(F.closeCamera).catch(() => {}); throw e; }
     cam = await camP;
     const d = await F.scanFace($("faceVideo"), prog, faceCtl, faceDesc);
-    if (F.faceDistance(d, faceDesc) > F.FACE_THRESHOLD) { show("checkin"); return setMsg("msg", "Your face doesn't match this account, so check-in was cancelled."); }
+    const dd = F.faceDistance(d, faceDesc); console.log("face distance", dd);
+    if (dd > F.FACE_THRESHOLD) { show("checkin"); return setMsg("msg", "Your face doesn't match this account, so check-in was cancelled. (score " + dd.toFixed(2) + ", needs " + F.FACE_THRESHOLD + " or less). Try again facing the light."); }
   } catch (err) { console.error(err); show("checkin"); return setMsg("msg", faceMsg(err)); }
   finally { if (faceMod) faceMod.closeCamera(cam); }
   submit(code);

@@ -11,10 +11,9 @@ const LIBS = [
   { script: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js", models: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model" }
 ];
 
-export const FACE_JS_VERSION = "fast-1";
-export const FACE_THRESHOLD = 0.5;   // lower = stricter. Distances above this are "not the same person".
+export const FACE_JS_VERSION = "fast-3";
+export const FACE_THRESHOLD = 0.6;   // lower = stricter. Distances above this are "not the same person".
 const SCAN_SECONDS = 20;             // how long to wait for a blink before giving up
-const SAMPLES = 2;                   // face prints averaged (more = steadier but slower)
 
 const MODEL_FILES = ["tiny_face_detector_model-weights_manifest.json", "tiny_face_detector_model-shard1",
   "face_landmark_68_tiny_model-weights_manifest.json", "face_landmark_68_tiny_model-shard1",
@@ -98,11 +97,14 @@ const ear = p => (dist(p[1], p[5]) + dist(p[2], p[4])) / (2 * dist(p[0], p[3]));
 
 // Waits for one blink (proves a live person, not a still photo), then returns an averaged face print.
 // control = { cancelled: false } lets the caller stop the scan.
-// ref (optional) = the stored face print. If the first print clearly matches it, the scan ends at once.
+// ref (optional) = the stored face print. If it is given, the scan ends as soon as the face clearly matches it.
+const mean = arr => arr[0].map((_, i) => arr.reduce((s, d) => s + d[i], 0) / arr.length);
+const round4 = d => d.map(v => Math.round(v * 1e4) / 1e4);
+const sleep = ms => new Promise(r => setTimeout(r, ms));
 export async function scanFace(video, status, control, ref) {
   const f = window.faceapi, opts = new f.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.4 });
-  const t0 = Date.now();
-  let maxEar = 0, closed = false, blinked = false, seen = false;
+  const t0 = Date.now(), recent = [];
+  let closed = false, blinked = false, seen = false;
   status("Look at the camera", 64);
   while (Date.now() - t0 < SCAN_SECONDS * 1000) {
     if (control && control.cancelled) throw new Error("cancelled");
@@ -112,25 +114,38 @@ export async function scanFace(video, status, control, ref) {
     seen = true;
     status("Face found ✓ Now blink once (" + left + "s)", 72);
     const e = (ear(det.landmarks.getLeftEye()) + ear(det.landmarks.getRightEye())) / 2;
-    maxEar = Math.max(maxEar * 0.99, e);
-    if (e < maxEar * 0.8) closed = true;
-    else if (closed && e > maxEar * 0.88) { blinked = true; break; }
+    recent.push(e); if (recent.length > 15) recent.shift();      // baseline = widest eyes in the last ~15 frames
+    const base = Math.max(...recent);
+    if (e < base * 0.85) closed = true;
+    else if (closed && e > base * 0.92) { blinked = true; break; }
   }
   if (!blinked) throw new Error(seen ? "no-blink" : "no-face");
   status("Blink seen ✓ Hold still…", 82);
-  const out = [];
-  for (let i = 0; i < 25 && out.length < SAMPLES; i++) {
+  await sleep(100);                                              // let the eyes finish opening
+  const out = [], tEnd = Date.now() + 6000;
+  while (Date.now() < tEnd && out.length < 6) {
     if (control && control.cancelled) throw new Error("cancelled");
     const r = await f.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
-    if (r) {
-      const d = Array.from(r.descriptor); out.push(d);
-      if (ref && out.length === 1 && faceDistance(d, ref) <= FACE_THRESHOLD - 0.05) { status("Done ✓", 100); return d.map(v => Math.round(v * 1e4) / 1e4); }
-      status("Reading your face… " + out.length + "/" + SAMPLES, 82 + out.length * 8);
+    if (!r) continue;
+    const d = Array.from(r.descriptor); out.push(d);
+    status("Reading your face… " + out.length, Math.min(98, 82 + out.length * 4));
+    if (ref) {   // verification: stop early on a clear match, otherwise keep sampling and average
+      if (out.length === 1 && faceDistance(d, ref) <= FACE_THRESHOLD - 0.1) { status("Done ✓", 100); return round4(d); }
+      if (out.length >= 2) {   // any two consecutive prints that average close to the saved face = same person
+        const pair = mean(out.slice(-2));
+        if (faceDistance(pair, ref) <= FACE_THRESHOLD - 0.03) { status("Done ✓", 100); return round4(pair); }
+      }
     }
   }
-  if (out.length < SAMPLES) throw new Error("no-face");
+  if (out.length < (ref ? 2 : 3)) throw new Error("no-face");
+  let use = out;
+  if (!ref && out.length >= 4) {   // registration: drop the one blurry/odd sample so the saved print is clean
+    const m = mean(out); let worst = 0;
+    out.forEach((d, i) => { if (faceDistance(d, m) > faceDistance(out[worst], m)) worst = i; });
+    use = out.filter((_, i) => i !== worst);
+  }
   status("Done ✓", 100);
-  return out[0].map((_, i) => Math.round((out.reduce((s, d) => s + d[i], 0) / out.length) * 1e4) / 1e4);
+  return round4(mean(use));
 }
 
 export const faceDistance = (a, b) => Math.sqrt(a.reduce((s, v, i) => s + (v - b[i]) ** 2, 0));
