@@ -11,9 +11,19 @@ const LIBS = [
   { script: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/dist/face-api.js", models: "https://cdn.jsdelivr.net/npm/@vladmandic/face-api@1.7.12/model" }
 ];
 
+export const FACE_JS_VERSION = "fast-1";
 export const FACE_THRESHOLD = 0.5;   // lower = stricter. Distances above this are "not the same person".
 const SCAN_SECONDS = 20;             // how long to wait for a blink before giving up
 const SAMPLES = 2;                   // face prints averaged (more = steadier but slower)
+
+const MODEL_FILES = ["tiny_face_detector_model-weights_manifest.json", "tiny_face_detector_model-shard1",
+  "face_landmark_68_tiny_model-weights_manifest.json", "face_landmark_68_tiny_model-shard1",
+  "face_recognition_model-weights_manifest.json", "face_recognition_model-shard1", "face_recognition_model-shard2"];
+const prefetched = new Set();
+function prefetchModels(base) {
+  if (prefetched.has(base)) return; prefetched.add(base);
+  MODEL_FILES.forEach(n => fetch(base + "/" + n).catch(() => {}));
+}
 
 let ready = null, loadedSrc = null;
 export let sourceUsed = "";
@@ -39,6 +49,7 @@ export function loadFace(report) {
       for (const L of LIBS) {
         try {
           emit("Downloading face recognition (first time only)…", 12);
+          prefetchModels(L.models);   // fetch model files while the code downloads, not after
           if (loadedSrc !== L.script) { await addScript(L.script); loadedSrc = L.script; }
           const f = window.faceapi;
           if (!f) throw new Error("face-api not found after download");
@@ -51,10 +62,12 @@ export function loadFace(report) {
             f.nets.faceRecognitionNet.loadFromUri(L.models).then(step)
           ]);
           emit("Getting ready…", 62);
-          try {   // warm-up pass so the first real scan is fast
-            const c = document.createElement("canvas"); c.width = c.height = 64;
-            await f.detectSingleFace(c, new f.TinyFaceDetectorOptions({ inputSize: 160 })).withFaceLandmarks(true);
-          } catch {}
+          try {   // warm-up: run every network once so the first real scan does not compile GPU code
+            const cv = n => { const c = document.createElement("canvas"); c.width = c.height = n; return c; };
+            await f.detectSingleFace(cv(160), new f.TinyFaceDetectorOptions({ inputSize: 160 }));
+            await f.nets.faceLandmark68TinyNet.detectLandmarks(cv(112));
+            await f.nets.faceRecognitionNet.computeFaceDescriptor(cv(150));
+          } catch (e) { console.warn("warm-up skipped", e); }
           sourceUsed = L.models;
           return;
         } catch (e) { console.error("face source failed:", L.models, e); failures.push(L.models.replace("https://", "") + " -> " + (e && e.message || e)); }
@@ -85,7 +98,8 @@ const ear = p => (dist(p[1], p[5]) + dist(p[2], p[4])) / (2 * dist(p[0], p[3]));
 
 // Waits for one blink (proves a live person, not a still photo), then returns an averaged face print.
 // control = { cancelled: false } lets the caller stop the scan.
-export async function scanFace(video, status, control) {
+// ref (optional) = the stored face print. If the first print clearly matches it, the scan ends at once.
+export async function scanFace(video, status, control, ref) {
   const f = window.faceapi, opts = new f.TinyFaceDetectorOptions({ inputSize: 160, scoreThreshold: 0.4 });
   const t0 = Date.now();
   let maxEar = 0, closed = false, blinked = false, seen = false;
@@ -108,7 +122,11 @@ export async function scanFace(video, status, control) {
   for (let i = 0; i < 25 && out.length < SAMPLES; i++) {
     if (control && control.cancelled) throw new Error("cancelled");
     const r = await f.detectSingleFace(video, opts).withFaceLandmarks(true).withFaceDescriptor();
-    if (r) { out.push(Array.from(r.descriptor)); status("Reading your face… " + out.length + "/" + SAMPLES, 82 + out.length * 8); }
+    if (r) {
+      const d = Array.from(r.descriptor); out.push(d);
+      if (ref && out.length === 1 && faceDistance(d, ref) <= FACE_THRESHOLD - 0.05) { status("Done ✓", 100); return d.map(v => Math.round(v * 1e4) / 1e4); }
+      status("Reading your face… " + out.length + "/" + SAMPLES, 82 + out.length * 8);
+    }
   }
   if (out.length < SAMPLES) throw new Error("no-face");
   status("Done ✓", 100);

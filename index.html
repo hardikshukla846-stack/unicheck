@@ -453,7 +453,7 @@ const faceBar = document.getElementById("faceBar");
 const setProg = (m, p) => { faceStatus.textContent = m; faceBar.style.width = (p || 0) + "%"; };
 // Start downloading the face models in the background as soon as the sign-up tab is opened
 let preloaded = false;
-const preloadFace = () => { if (preloaded) return; preloaded = true; import("./face.js").then(F => F.loadFace()).catch(() => { preloaded = false; }); };
+const preloadFace = () => { if (preloaded) return; preloaded = true; import("./face.js?v=fast1").then(F => F.loadFace()).catch(() => { preloaded = false; }); };
 [signupTab, ...document.querySelectorAll(".switchSignup")].forEach(b => b.addEventListener("click", preloadFace));
 faceBtn.addEventListener("click", async () => {
   clearNotice();
@@ -461,7 +461,7 @@ faceBtn.addEventListener("click", async () => {
   faceBtn.disabled = true; faceDesc = null; setProg("Starting camera…", 5);
   let stream = null, F = null;
   try {
-    F = await import("./face.js");   // loaded only now, so the login page works even if face.js is missing
+    F = await import("./face.js?v=fast1");   // loaded only now, so the login page works even if face.js is missing
     camBox.hidden = false;   // show the picture box first: a hidden video can give a black picture
     stream = await F.openCamera(faceVideo);
     await F.loadFace(setProg);
